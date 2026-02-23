@@ -17,16 +17,18 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
     qualifiers: list[discord.Member | discord.User] = []
 
     gfad_channels = Bot.DeweyConfig["kfad-channels"]
-    godchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-god-channel"])
+    godchannel = Bot.client.get_channel(Bot.DeweyConfig["kfad-god-channel"])
+    if godchannel == None: godchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-god-channel"])
     
     assert not isinstance(godchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "god channel assertion"
     async for message in godchannel.history(limit=None, before=range_end, after=range_start):
         if not message.author.id in not_allowed:
-            #not_allowed.append(message.author.id)
-            pass
+            not_allowed.append(message.author.id)
 
     for i in gfad_channels:
-        cool_channel = await Bot.client.fetch_channel(i)
+        cool_channel = Bot.client.get_channel(i)
+        if cool_channel == None: cool_channel = await Bot.client.fetch_channel(i)
+
         assert not isinstance(cool_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), f"channel assertion '{i}' did not yeild usable channel"
         async for message in cool_channel.history(limit=None, before=range_end, after=range_start):
             #just get unique users first
@@ -51,8 +53,7 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
         for uid,messagecount in unique_authors.items():
             if messagecount >= message_requirement:
                 user = guild.get_member(int(uid))
-                if user == None:
-                    user = await guild.fetch_member(int(uid))
+                if user == None: user = await guild.fetch_member(int(uid))
 
                 qualifiers.append(user)
 
@@ -107,24 +108,27 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         await ctx.response.defer(ephemeral=False)
 
         assert ctx.guild, "ctx.guild assertion"
-        _,abcdefghijklmnopqrstuvwxyz = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False)
-        lalala = {}
+        _,qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False)
+        qualifier_count = {}
 
-        if len(abcdefghijklmnopqrstuvwxyz) == 0:
+        if len(qualifiers) == 0:
             await ctx.followup.send(content=f"(Nobody qualifies)", ephemeral=False)
             return
         
-        for uid,messagecount in abcdefghijklmnopqrstuvwxyz.items():
+        for uid,messagecount in qualifiers.items():
             if messagecount >= message_requirement:
-                lalala[str(uid)] = messagecount
+                qualifier_count[str(uid)] = messagecount
 
         string = ""
-        for uid,count in lalala.items():
-            loser = await ctx.guild.fetch_member(uid)
+        for uid,count in qualifier_count.items():
+            loser = ctx.guild.get_member(uid)
+            if loser == None: loser = await ctx.guild.fetch_member(uid)
+
             string += loser.name + ": " + str(count) + "\n"
         buffer = io.BytesIO()
         buffer.write(string.encode())
         buffer.seek(0)
         await ctx.followup.send(content=f"Qualifiers <t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
+
 
 Bot.tree.add_command(gfad_group)
