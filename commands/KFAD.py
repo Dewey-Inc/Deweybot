@@ -11,7 +11,8 @@ import datetime,random
 
 gfad_group = discord.app_commands.Group(name="gfad", description="God for a day")
 
-async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime, guild:discord.Guild,getmembers:bool) -> tuple[list[discord.Member | discord.User], dict[str,int]]:
+async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime,
+                         guild:discord.Guild,getmembers:bool,exclude_prev_gods:bool=True) -> tuple[list[discord.Member | discord.User], dict[str,int]]:
     unique_authors: dict[str, int] = {}
     not_allowed: list[int] = []
     qualifiers: list[discord.Member | discord.User] = []
@@ -20,10 +21,11 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
     godchannel = Bot.client.get_channel(Bot.DeweyConfig["kfad-god-channel"])
     if godchannel == None: godchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-god-channel"])
     
-    assert not isinstance(godchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "god channel assertion"
-    async for message in godchannel.history(limit=None, before=range_end, after=range_start):
-        if not message.author.id in not_allowed:
-            not_allowed.append(message.author.id)
+    if exclude_prev_gods:
+        assert not isinstance(godchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "god channel assertion"
+        async for message in godchannel.history(limit=None, before=range_end, after=range_start):
+            if not message.author.id in not_allowed:
+                not_allowed.append(message.author.id)
 
     for i in gfad_channels:
         cool_channel = Bot.client.get_channel(i)
@@ -77,7 +79,6 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
 
         assert ctx.guild, "ctx.guild assertion"
         qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True)
-        print(qualifiers)
 
         if len(qualifiers) == 0:
             await ctx.followup.send(content=f"(There aren't enough people who qualify)", silent=True, ephemeral=False)
@@ -98,7 +99,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
-async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1):
+async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1, exclude_prev_gods:bool=True):
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
@@ -108,7 +109,7 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         await ctx.response.defer(ephemeral=False)
 
         assert ctx.guild, "ctx.guild assertion"
-        _,qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False)
+        _,qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False,exclude_prev_gods=exclude_prev_gods)
         qualifier_count = {}
 
         if len(qualifiers) == 0:
