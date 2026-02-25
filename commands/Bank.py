@@ -18,7 +18,7 @@ coin_group = discord.app_commands.Group(name="deweycoin", description="Get rich 
 async def money_wallet(ctx : discord.Interaction, show: bool=True, user: discord.User | discord.Member | None = None):
     if user == None: user = ctx.user
 
-    embed = discord.Embed(title="Wallet!", description="Dolla dolla, dolla dolla")
+    embed = discord.Embed(title=f"{'Your' if ctx.user.id == user.id else f'{user.display_name}\'s'} Wallet!", description="Dolla dolla, dolla dolla")
     userstuff = moneylib.getUserInfo(user=user.id)
     embed.add_field(name="Cash", value=f"D¢{userstuff.balance}")
     await ctx.response.send_message(embed=embed, ephemeral=not show)
@@ -29,7 +29,7 @@ async def money_stats(ctx : discord.Interaction, show: bool=True, user: discord.
     if user == None: user = ctx.user
     sayyou = user.id == ctx.user.id
 
-    embed = discord.Embed(title="Stats!", description="Dolla dolla, dolla dolla")
+    embed = discord.Embed(title=f"{'Your' if ctx.user.id == user.id else f'{user.display_name}\'s'} Stats!", description="Dolla dolla, dolla dolla")
     userstuff = moneylib.getUserInfo(user=user.id).statistics
     embed.add_field(name=f"Highest balance {'you' if sayyou else 'they'}'ve ever had", value=f"D¢{userstuff.highestbalance}")
     embed.add_field(name=f"How much total {'you' if sayyou else 'they'}'ve spent", value=f"D¢{userstuff.spent}")
@@ -110,6 +110,19 @@ async def money_z_give_coin(ctx : discord.Interaction, user: discord.Member | di
         if user == None: user = ctx.user
         moneylib.giveCoins(user.id, coins)
         await ctx.response.send_message("ok",ephemeral=True)
+
+
+@coin_group.command(name="z-audit", description=" ! ADMIN ONLY ! how much money exists in the wild")
+async def money_z_audit(ctx : discord.Interaction, show:bool=True):
+    if Permissions.is_override(ctx):
+        money = moneylib.money_database.read_data(statement="SELECT balance FROM deweycoins;")
+        total_cash = 0
+
+        for i in money:
+            total_cash += i[0]
+        
+        await ctx.response.send_message(content=f"There are D¢{total_cash} in existence", ephemeral=not show)
+
 
 coin_group.add_command(gambling_group)
 Bot.tree.add_command(coin_group)

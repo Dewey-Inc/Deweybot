@@ -352,9 +352,9 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
             if user_quantity >= quantity:
                 _, user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=ctx.user.id,card_id=card_id)
                 cards_to_be_sold = user_cards[0:quantity]
-                view = gachalib.views.cardsell.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_be_sold,rarity=card.rarity)
+                view = gachalib.views.cardsell.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_be_sold,rarity=card.rarity, message=ctx)
                 await ctx.response.send_message(f"Do you want to sell sell {'this' if quantity == 1 else f'these x{quantity}'} {card.rarity} '\
-{card.name + ("" if quantity == 1 else "s")}' for D¢{gachalib.getCardCost(card=card) * quantity}", ephemeral=False,view=view)
+{card.name + ("'" if quantity == 1 else "'s")} for D¢{gachalib.getCardCost(card=card) * quantity}", ephemeral=False,view=view)
             else:
                 await ctx.response.send_message("You don't have enough of this card to sell!", ephemeral=False)
         else:

@@ -6,9 +6,9 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 
 
     class CardSellConfirmation(discord.ui.View):
-        def __init__(self,owner: int, inventory_ids: list[gachalib.types.CardsInventory], rarity: str):
-            super().__init__(timeout=None)
-            self.message = None
+        def __init__(self,owner: int, inventory_ids: list[gachalib.types.CardsInventory], rarity: str, message:discord.Interaction):
+            super().__init__(timeout=30)
+            self.message: discord.Interaction = message
             self.owner: int = owner
             self.inventory_ids: list[gachalib.types.CardsInventory] = inventory_ids
             self.rarity: str = rarity
@@ -43,3 +43,13 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
             moneylib.giveCoins(user=self.owner, coins=owed)
             moneylib.giveCoins(user=Bot.client.user.id, coins=-owed)
             await interaction.response.send_message(content=f"Success! +D¢{owed} (now D¢{moneylib.getUserInfo(self.owner).balance})")
+    
+        async def disable(self):
+            for i in self.children:
+                if type(i) == discord.ui.Button:
+                    i.disabled = True
+            if self.message:
+                await self.message.edit_original_response(view=self)
+
+        async def on_timeout(self):
+            await self.disable()
