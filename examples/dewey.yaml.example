@@ -3,8 +3,8 @@ token:
 error-channel: # channel to log errors to
 main-guild:
 
-banned-role: 
-permission-override: []
+banned-role: # optional
+permission-override: [] # optional
 
 # Db settings
 gacha-sqlite-path:

@@ -52,9 +52,9 @@ def giveCoins(user: int, coins:int, doTransaction:bool=True) -> None:
     coinuser.balance += coins
     coinuser.statistics.transactions += 1 if doTransaction else 0
 
-    if coins < 0: # took away coins
+    if coins < 0 and doTransaction: # took away coins
         coinuser.statistics.spent -= coins
-    elif coins > 0: # gave coins
+    elif coins > 0 and doTransaction: # gave coins
         coinuser.statistics.totalearned += coins
         if coinuser.statistics.highestbalance < coinuser.balance:
             coinuser.statistics.highestbalance = coinuser.balance

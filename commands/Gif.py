@@ -8,7 +8,7 @@ import gif
 @discord.app_commands.allowed_installs(guilds=True, users=True)
 async def house(ctx : discord.Interaction, text: str):
     if not Permissions.banned(ctx):
-        await ctx.response.defer()
+        await ctx.response.defer(thinking=True)
         
         image_file = discord.File(gif.gen(text),filename=f"{text.replace(" ", "_")[0:32]}.gif")
         await ctx.followup.send(file=image_file)

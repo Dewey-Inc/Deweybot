@@ -75,7 +75,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
         range_start = range_now - datetime.timedelta(weeks=1, days=1)
         range_end = range_now - datetime.timedelta(days=1)
         
-        await ctx.response.defer(ephemeral=False)
+        await ctx.response.defer(ephemeral=False,thinking=True)
 
         assert ctx.guild, "ctx.guild assertion"
         qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True)
@@ -106,7 +106,7 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         range_start = range_now - datetime.timedelta(weeks=1, days=1)
         range_end = range_now - datetime.timedelta(days=0)
         
-        await ctx.response.defer(ephemeral=False)
+        await ctx.response.defer(ephemeral=False, thinking=True)
 
         assert ctx.guild, "ctx.guild assertion"
         _,qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False,exclude_prev_gods=exclude_prev_gods)

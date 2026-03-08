@@ -112,7 +112,6 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
                 f"Your \"IMAGE\" was not an image. I think. Try again with a REAL image.", ephemeral=True,
             )
             return
-        await ctx.response.defer()
 
         extension = image.filename.split(".")
         extension = extension[len(extension)-1]
@@ -165,7 +164,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
 
         gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id)
         
-        await ctx.followup.send(
+        await ctx.response.send_message (
             f"Dewey submitted your gacha card for approval!!! (ID of {next_id})", ephemeral=True,
         )
 
