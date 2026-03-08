@@ -104,7 +104,7 @@ async def gambling_coins(ctx : discord.Interaction, coins: int):
 
         
         moneylib.giveCoins(user=ctx.user.id, coins=heads * 2, doTransaction=True)
-        moneylib.giveCoins(user=Bot.client.user.id, coins=-heads, doTransaction=True)
+        moneylib.giveCoins(user=Bot.client.user.id, coins=-heads*2, doTransaction=True)
         
         moneylib.updateValues(update=["heads"],values=[
             user.statistics.heads + heads
