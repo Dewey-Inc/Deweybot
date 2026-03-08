@@ -12,6 +12,8 @@ money_database = db_lib.setup_db(name="deweycoins", tables=["""CREATE TABLE "dew
 	"totalearned"	INTEGER,
     "lostgambling" INTEGER,
     "gainedgambling" INTEGER
+    "heads" INTEGER,
+    "tails" INTEGER
 );""","""
 CREATE TABLE "settings" (
 	"uid"	INTEGER
@@ -24,8 +26,8 @@ if not money_database:
 
 def register_user(user: int) -> moneylib.types.User:
     money_database.write_data(statement="INSERT INTO deweycoins \
-(uid,balance,highestbalance,transactions,spent,totalearned,lostgambling,gainedgambling) \
-VALUES (?,?,?,?,?,?,?,?)", data=(user,0,0,0,0,0,0,0))
+(uid,balance,highestbalance,transactions,spent,totalearned,lostgambling,gainedgambling,heads,tails) \
+VALUES (?,?,?,?,?,?,?,?,?,?)", data=(user,0,0,0,0,0,0,0,0,0))
     return moneylib.types.User(uid=user)
 
 def updateValues(update:list[str],values:list[str | int],id:int) -> None:
@@ -37,9 +39,9 @@ def updateValues(update:list[str],values:list[str | int],id:int) -> None:
 def getUserInfo(user: int) -> moneylib.types.User:
     try:
         a = money_database.read_data(statement="SELECT uid,balance,highestbalance,transactions,spent,totalearned,\
-lostgambling,gainedgambling FROM deweycoins WHERE uid = (?)", parameters=(user,))[0]
+lostgambling,gainedgambling,heads,tails FROM deweycoins WHERE uid = (?)", parameters=(user,))[0]
         return moneylib.types.User(uid=a[0],balance=a[1],statistics=moneylib.types.Statistics(
-            highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5],lostgambling=a[6],gainedgambling=a[7]
+            highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5],lostgambling=a[6],gainedgambling=a[7],heads=a[8],tails=a[9]
         ))
     except IndexError:
         return register_user(user=user)
@@ -56,7 +58,7 @@ def giveCoins(user: int, coins:int, doTransaction:bool=True) -> None:
         coinuser.statistics.totalearned += coins
         if coinuser.statistics.highestbalance < coinuser.balance:
             coinuser.statistics.highestbalance = coinuser.balance
-    print(coinuser)
+
     updateValues(update=["balance","highestbalance","transactions","totalearned","spent"],
                  values=[coinuser.balance,coinuser.statistics.highestbalance
                   ,coinuser.statistics.transactions, coinuser.statistics.totalearned

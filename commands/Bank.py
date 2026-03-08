@@ -1,3 +1,5 @@
+from random import randint
+
 import discord
 from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
@@ -37,6 +39,8 @@ async def money_stats(ctx : discord.Interaction, show: bool=True, user: discord.
     embed.add_field(name=f"How many transactions {'you' if sayyou else 'they'}'ve made", value=f"{userstuff.transactions}")
     embed.add_field(name=f"How much {'you' if sayyou else 'they'}'ve lost gambling", value=f"D¢{userstuff.lostgambling}")
     embed.add_field(name=f"How many {'you' if sayyou else 'they'}'ve made while gambling", value=f"D¢{userstuff.gainedgambling}")
+    embed.add_field(name=f"How many heads {'you' if sayyou else 'they'} got", value=f"D¢{userstuff.heads}")
+    embed.add_field(name=f"How many tails {'you' if sayyou else 'they'} got", value=f"D¢{userstuff.tails}")
     await ctx.response.send_message(embed=embed, ephemeral=not show)
 
 
@@ -71,7 +75,48 @@ async def gambling_doors(ctx : discord.Interaction, bet: int):
 
 
 
+@gambling_group.command(name="coins", description="Gamble with many many many coins!")
+async def gambling_coins(ctx : discord.Interaction, coins: int):
+    if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
+        await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
+        return
+    
+    assert Bot.client.user, "bot has no user"
 
+    if coins <= 0:
+        await ctx.response.send_message(content=f"You can't flip no coins!",ephemeral=True)
+        return
+
+    user = moneylib.getUserInfo(user=ctx.user.id)
+
+    if user.balance >= coins:
+        moneylib.giveCoins(user=ctx.user.id, coins=-coins, doTransaction=False)
+        moneylib.giveCoins(user=Bot.client.user.id, coins=coins, doTransaction=False)
+
+        heads = 0
+        tails = 0
+
+        for i in range(coins):
+            if randint(0,1) == 0: #heads
+                heads += 1
+            else: # tails
+                tails += 1
+
+        
+        moneylib.giveCoins(user=ctx.user.id, coins=heads * 2, doTransaction=True)
+        moneylib.giveCoins(user=Bot.client.user.id, coins=-heads, doTransaction=True)
+        
+        moneylib.updateValues(update=["heads"],values=[
+            user.statistics.heads + heads
+        ],id=ctx.user.id)
+        moneylib.updateValues(update=["tails"],values=[
+            user.statistics.tails + tails
+        ],id=ctx.user.id)
+        
+
+        await ctx.response.send_message(content=f"You got {heads} heads/{tails} tails. so you  {heads-tails} (heads-tails) coins.")
+    else:
+        await ctx.response.send_message(content=f"You don't have enough coins!",ephemeral=False)
 
 
 
