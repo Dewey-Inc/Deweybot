@@ -68,7 +68,7 @@ async def gfad_help(ctx : discord.Interaction):
 
 
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
-async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 7, exclude_previous_gods=False):
+async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 7, exclude_previous_gods:bool=False):
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
