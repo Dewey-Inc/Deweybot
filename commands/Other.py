@@ -17,7 +17,7 @@ async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discor
         )
         await channel.send(what_said)
 
-if Bot.DeweyConfig["gacha-enable"]:
+if Bot.DeweyConfig["gacha-enabled"]:
     import gachalib
     if Bot.DeweyConfig["gacha-reminder-task"]:
         @admin_group.command(name="start-reminder-task", description="!-ADMIN ONLY-! restart reminder task")
