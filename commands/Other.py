@@ -55,3 +55,5 @@ async def sexer(ctx : discord.Interaction):
     sexer = open("other/ytp_sexer.mp4", "rb")
     await ctx.response.send_message(file=discord.File(fp=sexer, filename="sexer.mp4"))
     sexer.close()
+
+Bot.tree.add_command(admin_group)
