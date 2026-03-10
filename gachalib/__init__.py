@@ -82,15 +82,18 @@ if Bot.DeweyConfig["gacha-reminder-task"]:
 
         
         for i in qualifiers_to_dm:
-            user = Bot.client.get_user(i)
-            if user == None: user = await Bot.client.fetch_user(i)
+            try:
+                user = Bot.client.get_user(i)
+                if user == None: user = await Bot.client.fetch_user(i)
 
-            dm_channel = user.dm_channel
+                dm_channel = user.dm_channel
 
-            if not dm_channel: dm_channel = await user.create_dm()
+                if not dm_channel: dm_channel = await user.create_dm()
+                
+                await dm_channel.send("Hey, it's me again, Dewey. You can roll your Gacha again.\n-# you can disable this... `/gacha settings roll-reminders`")
+            except discord.errors.Forbidden:
+                pass
             
-            await dm_channel.send("Hey, it's me again, Dewey. You can roll your Gacha again.\n-# you can disable this... `/gacha settings roll-reminders`")
-
             #set the timeout to -2 so they don't qualify again (we don't dm them again)
             gachalib.gacha_user.set_user_timeout(user_id=i,unix_time=-2)
         end = gachalib.gacha_user.get_timestamp()
