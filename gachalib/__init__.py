@@ -64,7 +64,7 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 
 
 if Bot.DeweyConfig["gacha-reminder-task"]:
-    @tasks.loop(minutes=1)
+    @tasks.loop(name="reminder-task", minutes=1)
     async def reminder_task():
         start = gachalib.gacha_user.get_timestamp()
 

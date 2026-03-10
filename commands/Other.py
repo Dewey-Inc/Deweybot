@@ -3,7 +3,12 @@ from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
 
-@Bot.tree.command(name="z-repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
+
+admin_group = discord.app_commands.Group(name="z-admin-other", description="g")
+
+
+
+@admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
 async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread):
     if Permissions.is_override(ctx):
@@ -11,6 +16,31 @@ async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discor
             f"okay!", ephemeral=True
         )
         await channel.send(what_said)
+
+if Bot.DeweyConfig["gacha-enable"]:
+    import gachalib
+    if Bot.DeweyConfig["gacha-reminder-task"]:
+        @admin_group.command(name="start-reminder-task", description="!-ADMIN ONLY-! restart reminder task")
+        @discord.app_commands.allowed_installs(guilds=True, users=False)
+        async def reminder_task(ctx : discord.Interaction):
+            if Permissions.is_override(ctx):
+                if not gachalib.reminder_task.is_running:
+                    gachalib.reminder_task.start()
+                    await ctx.response.send_message(
+                        f"okay!", ephemeral=True
+                    )
+                else:
+                    await ctx.response.send_message(
+                        f"its running already", ephemeral=True
+                    )
+        @admin_group.command(name="check-reminder-task", description="!-ADMIN ONLY-! check if reminder task running")
+        @discord.app_commands.allowed_installs(guilds=True, users=False)
+        async def check_reminder_task(ctx : discord.Interaction):
+            if Permissions.is_override(ctx):
+                await ctx.response.send_message(
+                    gachalib.reminder_task.is_running, ephemeral=True
+                )
+
 
 @Bot.tree.command(name="version", description="What version am I?")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
