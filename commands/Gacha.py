@@ -26,6 +26,7 @@ import gachalib.views.inventory
 import gachalib.views.pack
 import gachalib.views.request
 import gachalib.views.unaccepted
+import gachalib.views.browser
 if Bot.DeweyConfig["deweycoins-enabled"]: import gachalib.views.cardsell
 
 gacha_settings = gachalib.gacha_settings
@@ -168,6 +169,19 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
             f"Dewey submitted your gacha card for approval!!! (ID of {next_id})", ephemeral=True,
         )
 
+@gacha_group.command(name="self-submissions", description="View cards you submitted")
+async def gacha_browsecards(ctx : discord.Interaction, page:int = 1):
+    if not Permissions.banned(ctx):
+        if page <= 0: page = 1
+
+        view = gachalib.views.browser.BrowserView(inventory=False,page=page,cards=gachalib.cards.get_cards_sent_by_id(ctx.user.id)[1])
+
+        embed = gachalib.cardBrowserEmbed(uid=-1, cards=view.cards, page=page,inventory=False)
+
+        if type(embed) == discord.Embed:
+            await ctx.response.send_message(content="", embed=embed, view=view)
+        else:
+            await ctx.response.send_message(content=embed, embed=None, view=view)
 
 @gacha_group.command(name="editcard", description="Re-submit an edited gacha card (or admin)!")
 async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", description: str = ""):

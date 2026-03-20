@@ -32,6 +32,9 @@ def get_cards() -> tuple[bool, list[gachalib.types.Card]]:
 def get_approved_cards() -> tuple[bool, list[gachalib.types.Card]]:
     return db_get_cards(statement=f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE accepted = True")
 
+def get_cards_sent_by_id(id:int) -> tuple[bool, list[gachalib.types.Card]]:
+    return db_get_cards(statement=f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (maker_id) = (?)", parameters=(id,))
+
 
 def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.types.Card]]:
     a,b = db_get_cards(statement="SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha;")
