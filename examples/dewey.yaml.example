@@ -46,3 +46,4 @@ obs-integration-post-host:  # Should be like "proto://host:port" (no trailing sl
 nick-enabled: 
 gif-enabled: 
 reminders-enabled: 
+grok-responses: 

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
+import random
 
 
 admin_group = discord.app_commands.Group(name="z-admin-other", description="g")
@@ -28,8 +29,24 @@ if Bot.DeweyConfig["reminders-enabled"]:
         Remindme.setReminder(uid=ctx.user.id,made=round(now.timestamp()),when=when,note=note,message=message.message_id,guild=ctx.guild_id,channel=ctx.channel_id)
         Remindme.getReminders()
 
+responses = [
+    "It is certain", "Reply hazy, try again", "Don't count on it",
+    "It is decidedly so", "Ask again later", "My reply is no",
+    "Without a doubt", "Better not tell you now", "My sources say no",
+    "Yes definitely", "Cannot predict now", "Outlook not so good",
+    "You may rely on it", "Concentrate and ask again", "Very doubtful",
+    "As I see it, yes",
+    "Most likely",
+    "Outlook good",
+    "Yes",
+    "Signs point to yes"
+]
 
-
+if Bot.DeweyConfig["grok-responses"]:
+    @Bot.client.event
+    async def on_message(ctx: discord.Message):
+        if "@grok is this" in ctx.content.lower():
+            await ctx.reply(random.choice(responses))
 
 
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
