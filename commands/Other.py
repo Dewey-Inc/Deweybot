@@ -66,7 +66,7 @@ async def on_message(message: discord.Message):
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
 async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread, reply: str = "0"):
-    if Permissions.is_override(ctx):
+    if Permissions.is_override(ctx)or Permissions.is_repeat(ctx):
         if reply == "0":
             await channel.send(content=what_said)
         else:
