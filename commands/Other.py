@@ -65,8 +65,22 @@ async def on_message(message: discord.Message):
 
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
-async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread, reply: str = "0"):
-    if Permissions.is_override(ctx)or Permissions.is_repeat(ctx):
+async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread | None = None, reply: str = "0"):
+    if Permissions.is_override(ctx) or Permissions.is_repeat(ctx):
+        if Bot.DeweyConfig["dewey-repeat-log"][0] == "dm":
+            log_channel = await Bot.client.fetch_user(Bot.DeweyConfig["dewey-repeat-log"][1])
+        elif Bot.DeweyConfig["dewey-repeat-log"][0] == "channel":
+            log_channel = await Bot.client.fetch_channel(Bot.DeweyConfig["dewey-repeat-log"][1])
+        else: raise Exception("Dewey config option \"review\" is not set to 'channel' or 'dm'")
+        
+        assert not isinstance(log_channel,(discord.ForumChannel,discord.CategoryChannel,Bot.PrivateChannel)), "log channel assertion"
+        assert channel, "channel assertion"
+
+        if channel == None:
+            channel = ctx.channel
+
+        assert channel, "channel assertion"
+
         if reply == "0":
             await channel.send(content=what_said)
         else:
@@ -77,6 +91,7 @@ async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discor
         await ctx.response.send_message(
             f"okay!", ephemeral=True
         )
+        await log_channel.send(f"{ctx.user.name} said `{what_said}`")
 
 if Bot.DeweyConfig["gacha-enabled"]:
     import gachalib
