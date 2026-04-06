@@ -48,7 +48,7 @@ responses = [
 async def on_message(message: discord.Message):
     if Bot.DeweyConfig["grok-responses"]:
         assert Bot.client.user
-        if re.search(f"(@?grok|@?gork|{Bot.client.user.mention}) (am|is|are|had|do|was|were|have|did)", message.content.lower()):
+        if re.search(f"(@?grok|@?gork)", message.content.lower()):
             if random.random() < 0.02:
                 await message.reply("oh poor baby 🥺🥺 do you need the robot to make you pictures? 🥺🥺 yeah? 🥺🥺 do you need the bo-bot to write you essay too? yeah ??? you can't do it?? 🥺🥺 you're a moron??🥺🥺 do you need chat gpt to fuck your wife ?? 🥺🥺🥺")
             else:
