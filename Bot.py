@@ -8,7 +8,7 @@ import traceback
 with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
 
-import gachalib
+if DeweyConfig["gacha-enabled"]: import gachalib
 import other.Permissions as Permissions
 import other.Settings as Settings
 import other.Remindme

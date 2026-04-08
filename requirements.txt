@@ -1,3 +1,5 @@
 discord.py
 pyyaml
 pillow
+pymysql
+sqlite3
