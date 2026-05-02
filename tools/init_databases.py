@@ -1,7 +1,5 @@
 #! /usr/bin/env python3
 
-#raise Exception("NOT WRITTEN YET!!!!!!!!!!!! come back later :)")
-
 from yaml import load,Loader
 import sqlite3, pymysql
 
@@ -13,9 +11,9 @@ tablestype = list[tabletype]
 
 GachaTables: tablestype = [
     ("gacha", [
-        ("maker_id",           "int(19)"),
-        ("request_message_id", "int(20)"),
-        ("id",                 "int(5)"),
+        ("maker_id",           "INTEGER"),
+        ("request_message_id", "INTEGER"),
+        ("id",                 "INTEGER"),
         ("accepted",           "BOOL"),
         ("name",               "varchar(256)"),
         ("description",        "varchar(256)"),
@@ -23,18 +21,13 @@ GachaTables: tablestype = [
         ("filename",           "varchar(256)"),
     ]),
     ("gacha_user", [
-        ("user_id",  "int(19)"),
-        ("last_use", "int(20)"),
+        ("user_id",  "INTEGER"),
+        ("last_use", "INTEGER"),
     ]),
     ("gacha_cards", [
-        ("id",      "int(20)"),
-        ("card_id", "int(5)"),
-        ("user_id", "int(19)"),
-    ]),
-    ("settings", [
-        ("uid",              "int(19)"),
-        ("roll_reminder_dm", "bool"),
-        ("roll_auto_sell",   "bool"),
+        ("id",      "INTEGER"),
+        ("card_id", "INTEGER"),
+        ("user_id", "INTEGER"),
     ]),
 ]
 
@@ -51,9 +44,6 @@ CoinsTables: tablestype = [
         ("heads",           "INTEGER"),
         ("tails",           "INTEGER")
     ]),
-    ("settings", [
-        ("uid",              "INTEGER"),
-    ]),
 ]
 
 ReminderTables: tablestype = [
@@ -66,8 +56,13 @@ ReminderTables: tablestype = [
         ("channel", "INTEGER"),
         ("message", "INTEGER"),
     ]),
+]
+
+SettingsTables: tablestype = [
     ("settings", [
         ("uid",              "INTEGER"),
+        ("roll_reminder_dm", "bool"),
+        ("roll_auto_sell",   "bool"),
     ]),
 ]
 
@@ -86,68 +81,68 @@ if __name__ == "__main__":
     print("Yo yo yo! Welcome to the Dewey Database maker")
 
     #gacha_database = db_lib.setup_db(name="gacha", file=Bot.DeweyConfig["gacha-sqlite-path"])
-    gachadefinitions =    []
-    coinsdefinitions =    []
-    reminderdefinitions = []
+    definitions = []
 
     for i in GachaTables:
-        gachadefinitions.append(makeCreateStatement(table=i))
+        definitions.append(makeCreateStatement(table=i))
     for i in CoinsTables:
-        coinsdefinitions.append(makeCreateStatement(table=i))
+        definitions.append(makeCreateStatement(table=i))
     for i in ReminderTables:
-        reminderdefinitions.append(makeCreateStatement(table=i))
+        definitions.append(makeCreateStatement(table=i))
+    for i in SettingsTables:
+        definitions.append(makeCreateStatement(table=i))
+
+    #print(definitions)
 
     if DeweyConfig["database-type"] == "SQLite3":
         print("creating SQLite3")
-        dbs:list[tuple[str,list]] = [
-            ("gacha-sqlite-path",gachadefinitions),
-            ("deweycoins-sqlite-path",coinsdefinitions),
-            ("reminders-sqlite-path",reminderdefinitions),
-            ]
-        for i in dbs:
-            print(f"creating new db @{DeweyConfig[i[0]]}")
-
-            db = sqlite3.connect(DeweyConfig[i[0]])
-            
-            for x in i[1]:
-                try:
-                    db.cursor().execute(x)
-                except sqlite3.OperationalError as e:
-                    msg = str(e)
-                    if msg.startswith("table ") and msg.endswith(" already exists"):
-                        print("already exists")
-                        pass
-                    else:
-                        raise e
+        print(f"creating new db @{DeweyConfig["dewey-sqlite-path"]}")
+        
+        db = sqlite3.connect(DeweyConfig["dewey-sqlite-path"])
+        
+        for x in definitions:
+            try:
+                db.cursor().execute(x)
+            except sqlite3.OperationalError as e:
+                msg = str(e)
+                if msg.startswith("table ") and msg.endswith(" already exists"):
+                    print("already exists")
+                    pass
+                else:
+                    raise e
 
             db.commit()
-            db.close()
-            print("closed")
+        db.close()
+        print("closed")
     elif DeweyConfig["database-type"] == "MySQL":
         print("creating MySQL")
-        dbs:list[tuple[str,list]] = [
-            ("mysql-gacha-database",gachadefinitions),
-            ("mysql-deweycoins-database",coinsdefinitions),
-            ("mysql-reminders-database",reminderdefinitions),
-            ]
-        for i in dbs:
-            print(f"creating new db @{DeweyConfig[i[0]]}")
+        print(f"creating new db @{DeweyConfig["mysql-database"]}")
 
-            db = pymysql.connect(host=DeweyConfig["mysql-host"],
-                                user=DeweyConfig["mysql-username"],
-                                password=DeweyConfig['mysql-password'],
-                                #database=DeweyConfig[i[0]],
-                                cursorclass=pymysql.cursors.DictCursor)
-            print("Connected to sql")
-            
-            db.cursor().execute(f'CREATE DATABASE {DeweyConfig[i[0]]};')
-            db.cursor().execute(f'USE {DeweyConfig[i[0]]};')
+        db = pymysql.connect(host=DeweyConfig["mysql-host"],
+                            user=DeweyConfig["mysql-username"],
+                            password=DeweyConfig['mysql-password'],
+                            #database=DeweyConfig[i[0]],
+                            cursorclass=pymysql.cursors.DictCursor)
+        
+        print("Connected to sql")
 
-            for x in i[1]:
+        db.cursor().execute(f'CREATE DATABASE {DeweyConfig["mysql-database"]};')
+        db.cursor().execute(f'USE {DeweyConfig["mysql-database"]};')
+        
+        for x in definitions:
+            try:
                 db.cursor().execute(x)
+            except sqlite3.OperationalError as e:
+                msg = str(e)
+                if msg.startswith("table ") and msg.endswith(" already exists"):
+                    print("already exists")
+                    pass
+                else:
+                    raise e
 
             db.commit()
-            db.close()
-            print("closed")
+
+        db.close()
+        print("closed")
     else:
         raise Exception("deweyconfig database-type is not SQLite3 or MySQL")
