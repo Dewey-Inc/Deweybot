@@ -14,13 +14,8 @@ mysql-host:
 mysql-username:
 mysql-password:
 
-mysql-gacha-database:
-mysql-deweycoins-database:
-mysql-reminders-database:
-
-gacha-sqlite-path:
-deweycoins-sqlite-path: 
-reminders-sqlite-path: 
+mysql-database: 
+dewey-sqlite-path: 
 
 # Gacha settings
 gacha_enabled: 
