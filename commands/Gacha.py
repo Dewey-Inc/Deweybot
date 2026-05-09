@@ -91,8 +91,8 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
 
 @gacha_group.command(name="submitcard", description="Submit a new gacha card!")
 async def gacha_submitcard(ctx : discord.Interaction, name: str, description: str, image: discord.Attachment, additional_info:str=""):
-    if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
-        await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
+    if not Permissions.check_if_in_main_guid(ctx=ctx): 
+        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
@@ -185,9 +185,9 @@ async def gacha_browsecards(ctx : discord.Interaction, page:int = 1):
 
 @gacha_group.command(name="editcard", description="Re-submit an edited gacha card (or admin)!")
 async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", description: str = ""):
-    #if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
-    #    await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
-    #    return
+    if not Permissions.check_if_in_main_guid(ctx=ctx): 
+        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
+        return
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
             approval_channel = await Bot.client.fetch_user(Bot.DeweyConfig["review"][1])
@@ -318,8 +318,8 @@ Evil cards: {evil_cards_had}/{cards_total} ({round((evil_cards_had/cards_total)*
 
 @gacha_group.command(name="roll", description="Roll for a card!")
 async def gacha_roll(ctx : discord.Interaction):
-    if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
-        await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
+    if not Permissions.check_if_in_main_guid(ctx=ctx): 
+        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
     if not Permissions.banned(ctx):
         timestamp = gachalib.gacha_user.get_timestamp()
@@ -428,8 +428,8 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 
 @gacha_group.command(name="trade", description="Trade with someone")
 async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
-    if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
-        await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
+    if not Permissions.check_if_in_main_guid(ctx=ctx): 
+        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
     if not Permissions.banned(ctx):
         if ctx.user.id == user.id:
@@ -440,8 +440,8 @@ async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
 
 #@gacha_group.command(name="send-card", description="Give someone a card")
 #async def gacha_send_card(ctx : discord.Interaction, inv_id:int, user:discord.Member):
-#    if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
-#        await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
+#    if not Permissions.check_if_in_main_guid(ctx=ctx): 
+#        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
 #        return
 #    test = gachalib.cards_inventory.change_card_owner(user.id, inv_id)
 #    await ctx.response.send_message(test)

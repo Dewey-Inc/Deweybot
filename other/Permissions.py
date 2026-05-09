@@ -66,3 +66,9 @@ def is_repeat(ctx: discord.Interaction) -> bool:
                 return True
             
     return False
+
+def check_if_in_main_guid(ctx: discord.Interaction) -> bool:
+    if Bot.client.main_guild is not None:
+        return Bot.client.main_guild.get_member(ctx.user.id) is not None
+    else:
+        return False

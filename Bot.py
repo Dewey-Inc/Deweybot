@@ -30,6 +30,7 @@ import other.Settings as Settings
 class botClient(discord.Client):
     def __init__(self):
         super().__init__(intents = discord.Intents.all())
+        self.main_guild: discord.Guild | None
         self.synced = False
         self.on_ready_functions: list[MethodType] = []
         self.on_message_functions: list[CoroutineType | FunctionType] = []
@@ -46,6 +47,8 @@ class botClient(discord.Client):
             self.synced = True
            
         await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
+
+        self.main_guild = self.get_guild(DeweyConfig["main-guild"])
 
         print(f" [on_ready] Dewey'd as {self.user}")
 

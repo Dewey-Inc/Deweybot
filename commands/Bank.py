@@ -87,8 +87,8 @@ gambling_group = discord.app_commands.Group(name="gambling", description="Get ri
 
 @gambling_group.command(name="doors", description="Gamble with 3 doors")
 async def gambling_doors(ctx : discord.Interaction, bet: int):
-    if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
-        await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
+    if not Permissions.check_if_in_main_guid(ctx=ctx): 
+        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
     
     assert Bot.client.user, "bot has no user"
@@ -113,8 +113,8 @@ async def gambling_doors(ctx : discord.Interaction, bet: int):
 
 @gambling_group.command(name="coins", description="Gamble with many many many coins!")
 async def gambling_coins(ctx : discord.Interaction, coins: int):
-    if ctx.guild_id != Bot.DeweyConfig["main-guild"]: 
-        await ctx.response.send_message("You can only run this in the main server!!!!!", ephemeral=True)
+    if not Permissions.check_if_in_main_guid(ctx=ctx): 
+        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
     
     assert Bot.client.user, "bot has no user"
