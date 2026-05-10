@@ -1,4 +1,3 @@
-# Code i stole from stackoverflow because mine didn't work
 from math import ceil
 
 from PIL import Image, ImageDraw, ImageSequence, ImageFont, ImageOps
@@ -18,7 +17,7 @@ def baseImg(text):
     d = ImageDraw.Draw(Image.new("RGB", (0,0))) # need to make a temp image to measure the text size (stupid)
     textSize = d.multiline_textbbox((0, 0), font=font, text=text, spacing=15)
 
-    frame = Image.new("RGB", (max(ceil(textSize[2]) + 24, im.width), ceil(textSize[3]) + 24), (255,255,255))
+    frame = Image.new("RGBA", (max(ceil(textSize[2]) + 24, im.width), ceil(textSize[3]) + 24), (255,255,255,255))
     d = ImageDraw.Draw(frame)
     d.multiline_text((frame.width/2,12), text, (0,0,0), font, "ma", align="center", spacing=15)
 
@@ -35,7 +34,7 @@ def gen(text):
         b = io.BytesIO()
         frame.save(b, format="GIF")
         old_frame = Image.open(b)
-        frame = Image.new("RGB", (im.width, im.height + textImg.height), (255, 255, 255))
+        frame = Image.new("RGBA", (im.width, im.height + textImg.height), (255, 255, 255, 255))
 
         frame.paste(textImg, (0, 0))
         frame.paste(old_frame, (0, textImg.height))
