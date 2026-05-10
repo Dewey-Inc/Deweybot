@@ -65,6 +65,13 @@ SettingsTables: tablestype = [
         ("roll_auto_sell",   "bool"),
     ]),
 ]
+DeweyPermissionsTables: tablestype = [
+    ("permissions", [
+        ("id",              "BIGINT"),
+        ("type",            "BIGINT"),
+        ("permission",      "BIGINT"),
+    ]),
+]
 
 def makeCreateStatement(table:tabletype) -> str:
     fields = ""
@@ -90,6 +97,8 @@ if __name__ == "__main__":
     for i in ReminderTables:
         definitions.append(makeCreateStatement(table=i))
     for i in SettingsTables:
+        definitions.append(makeCreateStatement(table=i))
+    for i in DeweyPermissionsTables:
         definitions.append(makeCreateStatement(table=i))
 
     #print(definitions)

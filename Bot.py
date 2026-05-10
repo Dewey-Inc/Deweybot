@@ -1,3 +1,7 @@
+if __name__ == "__main__":
+    print("Don't run Bot.py please, run StartBot.py")
+    exit()
+
 import io
 from types import CoroutineType, FunctionType, MethodType
 import discord

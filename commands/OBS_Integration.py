@@ -15,7 +15,7 @@ obs_group = discord.app_commands.Group(name="obs", description="obs grop")
 
 @obs_group.command(name="z-launch-server", description="cause uptown funk gonna give it to ya")
 async def launch(ctx : discord.Interaction):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         global aa
         aa = subprocess.Popen([
             f"./server.py",
@@ -29,7 +29,7 @@ async def launch(ctx : discord.Interaction):
 
 @obs_group.command(name="z-kill-server", description="cause uptown funk gonna give it to ya")
 async def kill(ctx : discord.Interaction):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         if aa:
             aa.kill()
             running = False
@@ -37,7 +37,7 @@ async def kill(ctx : discord.Interaction):
 
 @obs_group.command(name="z-send-image", description="cause uptown funk gonna give it to ya")
 async def send(ctx : discord.Interaction, image : discord.Attachment):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         imaaage = BytesIO()
         await image.save(fp=imaaage)
 

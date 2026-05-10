@@ -69,7 +69,7 @@ if Bot.DeweyConfig["suggestions-enabled"]:
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
 async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread | None = None, reply: str = "0"):
-    if Permissions.is_override(ctx) or Permissions.is_repeat(ctx):
+    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN) or Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_REPEAT):
         if Bot.DeweyConfig["dewey-repeat-log"][0] == "dm":
             log_channel = await Bot.client.fetch_user(Bot.DeweyConfig["dewey-repeat-log"][1])
         elif Bot.DeweyConfig["dewey-repeat-log"][0] == "channel":
@@ -104,7 +104,7 @@ if Bot.DeweyConfig["gacha-enabled"]:
         @admin_group.command(name="start-reminder-task", description="!-ADMIN ONLY-! restart reminder task")
         @discord.app_commands.allowed_installs(guilds=True, users=False)
         async def reminder_task(ctx : discord.Interaction):
-            if Permissions.is_override(ctx):
+            if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
                 if not gachalib.reminder_task.is_running():
                     gachalib.reminder_task.start()
                     await ctx.response.send_message(
@@ -117,7 +117,7 @@ if Bot.DeweyConfig["gacha-enabled"]:
         @admin_group.command(name="check-reminder-task", description="!-ADMIN ONLY-! check if reminder task running")
         @discord.app_commands.allowed_installs(guilds=True, users=False)
         async def check_reminder_task(ctx : discord.Interaction):
-            if Permissions.is_override(ctx):
+            if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
                 await ctx.response.send_message(
                     gachalib.reminder_task.is_running(), ephemeral=True
                 )

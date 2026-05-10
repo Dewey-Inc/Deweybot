@@ -179,7 +179,7 @@ async def money_give_coin(ctx : discord.Interaction, user: discord.Member | disc
 
 @coin_group.command(name="z-movecoins", description=" ! ADMIN ONLY ! force move coins from user -> user (ex. take from dewey) (allows debt)")
 async def gacha_z_move_coin(ctx : discord.Interaction, from_user:discord.Member | discord.User, to_user: discord.Member | discord.User | None, coins:int):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         if to_user == None: to_user = ctx.user
         moneylib.giveCoins(from_user.id, -coins)
         moneylib.giveCoins(to_user.id, coins)
@@ -187,7 +187,7 @@ async def gacha_z_move_coin(ctx : discord.Interaction, from_user:discord.Member 
 
 @coin_group.command(name="z-givecoins", description=" ! ADMIN ONLY ! materialize coins (i advice against doing this)")
 async def money_z_give_coin(ctx : discord.Interaction, user: discord.Member | discord.User | None, coins:int):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         if user == None: user = ctx.user
         moneylib.giveCoins(user.id, coins)
         await ctx.response.send_message("ok",ephemeral=True)
@@ -195,7 +195,7 @@ async def money_z_give_coin(ctx : discord.Interaction, user: discord.Member | di
 
 @coin_group.command(name="z-audit", description=" ! ADMIN ONLY ! how much money exists in the wild")
 async def money_z_audit(ctx : discord.Interaction, show:bool=True):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         money = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="deweycoins",values=["balance"]))
         total_cash = 0
 

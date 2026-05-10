@@ -2,31 +2,43 @@ from discord.ext import commands
 import discord
 import Bot
 
-overrides = Bot.DeweyConfig["permission-override"]
-override_users = []
-override_roles = []
+TYPE_ROLE   = 1
+TYPE_MEMBER = 2
+PERMISSION_ADMIN           = 1
+PERMISSION_GFAD_DISALLOWED = 2
+PERMISSION_REPEAT          = 3
 
+permission_tree = {
+    PERMISSION_ADMIN: {
+        "name": "PERMISSION_ADMIN",
+        "id": PERMISSION_ADMIN,
+        "users": [],
+        "roles": []
+    },
+    PERMISSION_GFAD_DISALLOWED: {
+        "name": "PERMISSION_GFAD_DISALLOWED",
+        "id": PERMISSION_GFAD_DISALLOWED,
+        "users": [],
+        "roles": []
+    },
+    PERMISSION_REPEAT: {
+        "name": "PERMISSION_REPEAT",
+        "id": PERMISSION_REPEAT,
+        "users": [],
+        "roles": []
+    }
+}
 
-repeat = Bot.DeweyConfig["dewey-repeat-allowed"]
-repeat_users = []
-repeat_roles = []
+permissions = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="permissions", values=["id","type","permission"]))
 
-for i in overrides:
-    if i[0] == "role":
-        override_roles.append(i[1])
-    elif i[0] == "member":
-        override_users.append(i[1])
+for i in permissions:
+    if i[1] == TYPE_ROLE:
+        permission_tree[i[2]]["roles"].append(i[0])
+    elif i[1] == TYPE_MEMBER:
+        permission_tree[i[2]]["users"].append(i[0])
     else:
-        raise Exception(i[0], "is not 'role' or 'member' (check permission-override)")
-
-for i in repeat:
-    if i[0] == "role":
-        repeat_roles.append(i[1])
-    elif i[0] == "member":
-        repeat_users.append(i[1])
-    else:
-        raise Exception(i[0], "is not 'role' or 'member' (check dewey-repeat-allowed)")
-
+        print("Weird permission")
+        print(i)
 
 #[y.id for y in ctx.user.roles]
 
@@ -43,26 +55,14 @@ def banned(ctx: discord.Interaction) -> bool:
             return True
     return False
 
-def is_override(ctx: discord.Interaction) -> bool:
-    if ctx.user.id in override_users:
+def check_permission(ctx: discord.Interaction,permission:int) -> bool:
+    if ctx.user.id in permission_tree[permission]["users"]:
         return True
     
     if type(ctx.user) == discord.Member:
         user_roles = [y.id for y in ctx.user.roles]
         for i in user_roles:
-            if i in override_roles:
-                return True
-            
-    return False
-
-def is_repeat(ctx: discord.Interaction) -> bool:
-    if ctx.user.id in repeat_users:
-        return True
-    
-    if type(ctx.user) == discord.Member:
-        user_roles = [y.id for y in ctx.user.roles]
-        for i in user_roles:
-            if i in repeat_roles:
+            if i in permission_tree[permission]["roles"]:
                 return True
             
     return False

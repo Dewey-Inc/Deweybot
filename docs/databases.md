@@ -87,3 +87,15 @@ One Dewey database has several tables, and their contents are as follows:
 |uid              |BIGINT      |Discord user ID|
 |roll_reminder_dm |bool        |Reminder to roll setting|
 |roll_auto_sell   |bool        |Setting to auto sell|
+
+
+## Dewey Settings Table(s)
+
+### "permissions"
+| Dewey Permissions
+
+| Name | Type | Use |
+|------|------|-----|
+|id               |BIGINT      |Discord Snowflake|
+|type             |BIGINT      |1 for role, 2 for member|
+|permission       |BIGINT      |1 for admin type (permission override), 2 for GFAD disallowed role, 3 for dewey repeat users, may be appended later|

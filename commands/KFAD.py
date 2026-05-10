@@ -69,7 +69,7 @@ async def gfad_help(ctx : discord.Interaction):
 
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
 async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 7, exclude_previous_gods:bool=False):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
         range_start = range_now - datetime.timedelta(days=days+1)
@@ -100,7 +100,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, day
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
 async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1, exclude_prev_gods:bool=True, days:int = 7):
-    if Permissions.is_override(ctx):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
         range_start = range_now - datetime.timedelta(days=days+1)

@@ -4,8 +4,6 @@ error-channel: # channel to log errors to
 main-guild:
 
 banned-role: # optional
-permission-override: [] # optional
-                        # format of [["member", id], ["role", id]]
 
 # Db settings
 database-type:  # Set to SQLite3 or MySQL
@@ -34,7 +32,6 @@ deweycoins-enabled:
 
 # gfad
 kfad-enabled: 
-kfad-disallowed-roles: []
 kfad-must-have:  # messages
 kfad-role: 
 kfad-channels: []
@@ -52,5 +49,4 @@ nick-enabled:
 gif-enabled: 
 reminders-enabled: 
 grok-responses: 
-dewey-repeat-log: # [type, id] Set type to "channel" or "dm" and id to a channel id or user id 
-dewey-repeat-allowed: # format of [["member", id], ["role", id]]
+dewey-repeat-log: # [type, id] Set type to "channel" or "dm" and id to a channel id or user id
