@@ -78,6 +78,8 @@ One Dewey database has several tables, and their contents are as follows:
 
 
 ## User Settings Table(s)
+
+### "settings"
 | Settings for users
 
 | Name | Type | Use |
