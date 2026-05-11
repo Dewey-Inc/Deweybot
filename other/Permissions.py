@@ -1,3 +1,5 @@
+from typing import Literal
+
 from discord.ext import commands
 import discord
 import Bot
@@ -7,6 +9,9 @@ TYPE_MEMBER = 2
 PERMISSION_ADMIN           = 1
 PERMISSION_GFAD_DISALLOWED = 2
 PERMISSION_REPEAT          = 3
+
+permission_literal = Literal["PERMISSION_ADMIN", "PERMISSION_GFAD_DISALLOWED", "PERMISSION_REPEAT"]
+type_literal       = Literal["TYPE_ROLE", "TYPE_MEMBER"]
 
 permission_tree = {
     PERMISSION_ADMIN: {
@@ -30,15 +35,6 @@ permission_tree = {
 }
 
 permissions = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="permissions", values=["id","type","permission"]))
-
-for i in permissions:
-    if i[1] == TYPE_ROLE:
-        permission_tree[i[2]]["roles"].append(i[0])
-    elif i[1] == TYPE_MEMBER:
-        permission_tree[i[2]]["users"].append(i[0])
-    else:
-        print("Weird permission")
-        print(i)
 
 #[y.id for y in ctx.user.roles]
 
@@ -66,6 +62,39 @@ def check_permission(ctx: discord.Interaction,permission:int) -> bool:
                 return True
             
     return False
+
+def add_permission(id:int, type: int, permission: int, temp:bool=False) -> bool:
+    if type == TYPE_ROLE:
+        permission_tree[permission]["roles"].append(id)
+    elif type == TYPE_MEMBER:
+        permission_tree[permission]["users"].append(id)
+    else:
+        print("Weird permission")
+        print(i)
+        return False # not successful
+    if not temp:
+        Bot.Deweybase.write_data(statement=Bot.Deweybase.create_write_statement(table="permissions",values=["id", "type", "permission"]),data=(id,type,permission))
+    return True # success
+
+def remove_permission(id:int, type: int, permission: int, temp:bool=False) -> bool:
+    if type == TYPE_ROLE:
+        while id in permission_tree[permission]["roles"]:
+            permission_tree[permission]["roles"].remove(id)
+    elif type == TYPE_MEMBER:
+        while id in permission_tree[permission]["users"]:
+            permission_tree[permission]["users"].remove(id)
+    else:
+        print("Weird permission")
+        print(i)
+        return False # not successful
+    if not temp:
+        Bot.Deweybase.write_data(statement=Bot.Deweybase.create_delete_statement(table="permissions",where=["id", "type", "permission"]),data=(id,type,permission))
+    return True # success
+
+for i in permissions:
+    add_permission(id=i[0],type=i[1],permission=i[2],temp=True)
+    
+print(permission_tree)
 
 def check_if_in_main_guid(ctx: discord.Interaction) -> bool:
     if Bot.client.main_guild is not None:

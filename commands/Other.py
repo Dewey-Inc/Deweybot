@@ -1,3 +1,6 @@
+
+import typing
+
 import discord
 from discord.ext import commands, tasks
 import Bot
@@ -136,5 +139,37 @@ async def sexer(ctx : discord.Interaction):
     sexer = open("other/ytp_sexer.mp4", "rb")
     await ctx.response.send_message(file=discord.File(fp=sexer, filename="sexer.mp4"))
     sexer.close()
+
+
+
+@admin_group.command(name="assign_permission", description="!-ADMIN ONLY-! assign someone a permission")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def assign_permission(ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
+    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+        a = Permissions.add_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
+        await ctx.response.send_message(content="Success" if a else "Malfunction")
+
+@admin_group.command(name="remove_permission", description="!-ADMIN ONLY-! remove permission from someone")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def remove_permission(ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
+    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+        a = Permissions.remove_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
+        await ctx.response.send_message(content="Success" if a else "Malfunction")
+
+@admin_group.command(name="list_permission", description="!-ADMIN ONLY-! list everyone with a permission")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def list_permission(ctx : discord.Interaction, permission:Permissions.permission_literal):
+    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+        permission_id = typing.get_args(Permissions.permission_literal).index(permission)+1
+        users_embed = discord.Embed(title="Users", description="ok")
+        roles_embed = discord.Embed(title="Roles", description="ok")
+
+        for i in Permissions.permission_tree[permission_id]["users"]:
+            users_embed.add_field(name=f"User", value=f"<@{i}>")
+        for i in Permissions.permission_tree[permission_id]["roles"]:
+            roles_embed.add_field(name=f"Role", value=f"<@&{i}>")
+
+        await ctx.response.send_message(embeds=[users_embed,roles_embed])
+
 
 Bot.tree.add_command(admin_group)
