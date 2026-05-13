@@ -47,6 +47,17 @@ responses = [
 ]
 
 
+if Bot.DeweyConfig["warf-reactions"]:
+    async def warf_react(message: discord.Message):
+        assert Bot.client.user
+        if "warf" in message.content.lower():
+            emoji = Bot.client.get_emoji(Bot.DeweyConfig["emoji-warf"])
+            if not emoji:
+                raise ValueError("emoji-warf is not a valid emoji ID")
+            else:
+                await message.add_reaction(emoji)
+    Bot.client.on_message_functions.append(warf_react)
+
 if Bot.DeweyConfig["grok-responses"]:
     async def grok_response_message(message: discord.Message):
         assert Bot.client.user

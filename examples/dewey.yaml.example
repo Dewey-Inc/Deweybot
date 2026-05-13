@@ -49,4 +49,9 @@ nick-enabled:
 gif-enabled: 
 reminders-enabled: 
 grok-responses: 
+warf-reactions: 
 dewey-repeat-log: # [type, id] Set type to "channel" or "dm" and id to a channel id or user id
+
+
+emoji-dewey: "" # Emoji that you would type <:Name:ID>
+emoji-warf:   # Emoji ID

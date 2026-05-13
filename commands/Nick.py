@@ -15,7 +15,7 @@ async def nickname(ctx : discord.Interaction, user: discord.Member | discord.Use
             previous = user.nick
             await user.edit(nick=nickname)
             await ctx.response.send_message(
-                f"<:Dewey:1463436505849528425> Dewey blast! <:Dewey:1463436505849528425> (name changed `{previous}` -> `{nickname}`)", ephemeral=False
+                f"{Bot.DeweyConfig["emoji-dewey"]} Dewey blast! {Bot.DeweyConfig["emoji-dewey"]} (name changed `{previous}` -> `{nickname}`)", ephemeral=False
             )
         except Exception as e:
             if "403" in str(e):
