@@ -36,14 +36,20 @@ class botClient(discord.Client):
         super().__init__(intents = discord.Intents.all())
         self.main_guild: discord.Guild | None
         self.synced = False
-        self.on_ready_functions: list[MethodType] = []
+        self.on_ready_functions: list[MethodType | FunctionType] = []
         self.on_message_functions: list[CoroutineType | FunctionType] = []
 
     async def on_ready(self):
         for i in self.on_ready_functions:
-            if isinstance(i, (MethodType)):
+            if isinstance(i, (MethodType, FunctionType)):
                 print(f" [on_ready] running on_ready_function of {i.__name__}")
-                i.__call__()
+                if iscoroutinefunction(i):
+                    await i.__call__()
+                else:
+                    i.__call__()
+
+        self.main_guild = self.get_guild(DeweyConfig["main-guild"])
+        
 
         await self.wait_until_ready()
         if not self.synced:
@@ -52,7 +58,6 @@ class botClient(discord.Client):
            
         await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
 
-        self.main_guild = self.get_guild(DeweyConfig["main-guild"])
 
         print(f" [on_ready] Dewey'd as {self.user}")
 
