@@ -136,9 +136,9 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         await ctx.followup.send(content=f"Qualifiers <t:{round(range_start.timestamp())}>-<t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
 
 if Bot.DeweyConfig["kfad-auto"]:
-    run = datetime.time(hour=20, minute=52, second=30, tzinfo=datetime.timezone(datetime.timedelta(hours=-4),"EDT"))
+    run = datetime.time(hour=15, minute=00, second=00, tzinfo=datetime.timezone(datetime.timedelta(hours=-4),"EDT"))
 
-    @tasks.loop(name="remindme-task",seconds=20)# time=run)
+    @tasks.loop(name="remindme-task", time=run)
     async def kfad_task():
         Logger.log(" [king for a day] im runnninggg", type=Logger.info)
         godchannel = Bot.client.get_channel(Bot.DeweyConfig["kfad-god-channel"])
