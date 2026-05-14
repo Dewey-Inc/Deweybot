@@ -1,5 +1,7 @@
+import other.Logger as Logger
+
 if __name__ == "__main__":
-    print("Don't run Bot.py please, run StartBot.py")
+    Logger.log("Don't run Bot.py please, run StartBot.py", type=Logger.fatal)
     exit()
 
 import io
@@ -42,14 +44,14 @@ class botClient(discord.Client):
     async def on_ready(self):
         for i in self.on_ready_functions:
             if isinstance(i, (MethodType, FunctionType)):
-                print(f" [on_ready] running on_ready_function of {i.__name__}")
+                Logger.log(f" [on_ready] running on_ready_function of {i.__name__}", type=Logger.info)
                 if iscoroutinefunction(i):
                     await i.__call__()
                 else:
                     i.__call__()
 
         self.main_guild = self.get_guild(DeweyConfig["main-guild"])
-        
+
 
         await self.wait_until_ready()
         if not self.synced:
@@ -59,7 +61,7 @@ class botClient(discord.Client):
         await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
 
 
-        print(f" [on_ready] Dewey'd as {self.user}")
+        Logger.log(f" [on_ready] Dewey'd as {self.user}", type=Logger.info)
 
 
     async def on_message(self, message: discord.Message):
@@ -94,7 +96,7 @@ class botClient(discord.Client):
     
     async def on_error(self, event, error = None):
         a = traceback.format_exc()
-        print(a)
+        Logger.log(a, type=Logger.error)
         channel = await client.fetch_channel(DeweyConfig["error-channel"])
         buffer = io.BytesIO()
         buffer.write(a.encode())
@@ -112,7 +114,7 @@ tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_com
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error):
     a = traceback.format_exc()
-    print(a)
+    Logger.log(a, type=Logger.error)
     channel = await client.fetch_channel(DeweyConfig["error-channel"])
     buffer = io.BytesIO()
     buffer.write(a.encode())

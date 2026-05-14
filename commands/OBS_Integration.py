@@ -6,6 +6,7 @@ import Bot
 import other.Permissions as Permissions
 
 import subprocess, requests
+import other.Logger as Logger
 
 aa = None
 running = False
@@ -22,7 +23,7 @@ async def launch(ctx : discord.Interaction):
             "-H", Bot.DeweyConfig["obs-integration-host"],
             "-P", str(Bot.DeweyConfig["obs-integration-port"]),
             "-s", Bot.DeweyConfig["obs-integration-secret"]], cwd="./other/dewey_obs")
-        print(" [OBS_Integration] launched Dewey OBS PID ", aa.pid)
+        Logger.log(" [OBS_Integration] launched Dewey OBS PID ", aa.pid, type=Logger.info)
         await ctx.response.send_message(f"i started it {aa.pid}")
         running = True
 

@@ -1,5 +1,6 @@
 from typing import Literal
 
+import other.Logger as Logger
 from discord.ext import commands
 import discord
 import Bot
@@ -69,8 +70,8 @@ def add_permission(id:int, type: int, permission: int, temp:bool=False) -> bool:
     elif type == TYPE_MEMBER:
         permission_tree[permission]["users"].append(id)
     else:
-        print("Weird permission")
-        print(i)
+        Logger.log("Weird permission", type=Logger.error)
+        Logger.log(i, type=Logger.error)
         return False # not successful
     if not temp:
         Bot.Deweybase.write_data(statement=Bot.Deweybase.create_write_statement(table="permissions",values=["id", "type", "permission"]),data=(id,type,permission))
@@ -84,8 +85,8 @@ def remove_permission(id:int, type: int, permission: int, temp:bool=False) -> bo
         while id in permission_tree[permission]["users"]:
             permission_tree[permission]["users"].remove(id)
     else:
-        print("Weird permission")
-        print(i)
+        Logger.log("Weird permission", type=Logger.error)
+        Logger.log(i, type=Logger.error)
         return False # not successful
     if not temp:
         Bot.Deweybase.write_data(statement=Bot.Deweybase.create_delete_statement(table="permissions",where=["id", "type", "permission"]),data=(id,type,permission))
@@ -94,7 +95,7 @@ def remove_permission(id:int, type: int, permission: int, temp:bool=False) -> bo
 for i in permissions:
     add_permission(id=i[0],type=i[1],permission=i[2],temp=True)
     
-print(permission_tree)
+Logger.log(permission_tree, type=Logger.verbose)
 
 def check_if_in_main_guid(ctx: discord.Interaction) -> bool:
     if Bot.client.main_guild is not None:

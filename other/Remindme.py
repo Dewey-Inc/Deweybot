@@ -1,5 +1,4 @@
-from email import message
-
+import other.Logger as Logger
 import Bot
 import datetime
 import discord
@@ -41,7 +40,7 @@ if Bot.DeweyConfig["reminders-enabled"]:
         
     @tasks.loop(name="remindme-task", minutes=1)
     async def remindme_task():
-        #print(" [EVIL REMINDER TASK] im runnninggg")
+        Logger.log(" [EVIL REMINDER TASK] im runnninggg")
         reminders = getReminders()
         reminder_qualifiers:list[Reminder] = []
 

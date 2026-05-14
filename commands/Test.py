@@ -12,7 +12,7 @@ async def self(ctx : discord.Interaction, test_argument: str):
 #@Bot.tree.command(name="requires-staff", description="permission test")
 #async def self(ctx : discord.Interaction):
 #    has_perms = Permissions.has_permission(ctx=ctx,allowed=["staff"])
-#    print(has_perms)
+#    Logger.log(has_perms, type=Logger.verbose)
 #    if has_perms:
 #        await ctx.response.send_message(
 #            f"ok", ephemeral=False

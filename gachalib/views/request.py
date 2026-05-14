@@ -12,7 +12,7 @@ class RequestView(discord.ui.View):
     async def approve_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         assert interaction.message, "no interaction.message"
         a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha",values=["id"], where=["request_message_id"]), parameters=(interaction.message.id,))[0]
-        #print("I believe this is id ", a[0])
+        #Logger.log("I believe this is id ", a[0], type=Logger.verbose)
 
         _, card = gachalib.cards.get_card_by_id(a[0])
         _, status = await gachalib.cards.approve_card(True, card)

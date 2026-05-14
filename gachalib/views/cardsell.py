@@ -1,4 +1,5 @@
 import Bot
+import other.Logger as Logger
 
 if Bot.DeweyConfig["deweycoins-enabled"]:
     import discord, moneylib
@@ -38,7 +39,7 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
                     return
 
                 gachalib.cards_inventory.change_card_owner(user_id=Bot.client.user.id, inv_id=i.inv_id)
-                print("GAVE TO DEWEY")
+                Logger.log("GAVE TO DEWEY", type=Logger.verbose)
 
             moneylib.giveCoins(user=self.owner, coins=owed)
             moneylib.giveCoins(user=Bot.client.user.id, coins=-owed)

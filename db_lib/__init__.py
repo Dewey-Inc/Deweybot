@@ -1,6 +1,7 @@
 import sqlite3
 import pymysql
 import Bot
+import other.Logger as Logger
 
 OpenDatabases = {}
 
@@ -19,7 +20,7 @@ class BaseDatabase:
         if connect: 
             self.connect()
 
-        print(f" [db_lib] [{self.ident}] opened db '{self.database_path}' ({"connected" if connect else "not connected"})")
+        Logger.log(f" [db_lib] [{self.ident}] opened db '{self.database_path}' ({"connected" if connect else "not connected"})", type=Logger.info)
     
     def connect(self) -> None:
         pass
@@ -38,7 +39,7 @@ class BaseDatabase:
     
     def write_data(self, statement: str, data: tuple) -> None:
         if self.database and self.cursor:
-            if self.verbose: print(f" [{self.type}] [{self.ident}] write '{statement}' , '{data}")
+            if self.verbose: Logger.log(f" [{self.type}] [{self.ident}] write '{statement}' , '{data}", type=Logger.verbose)
             self.cursor.execute(statement, data)
             self.database.commit()
         else:
@@ -46,10 +47,10 @@ class BaseDatabase:
     
     def read_data(self, statement: str, parameters: tuple = ()) -> list | tuple:
         if self.database and self.cursor:
-            if self.verbose: print(f" [{self.type}] [{self.ident}] read '{statement}' , '{parameters}")
+            if self.verbose: Logger.log(f" [{self.type}] [{self.ident}] read '{statement}' , '{parameters}", type=Logger.verbose)
             self.cursor.execute(statement, parameters)
             a = self.cursor.fetchall()
-            print(a)
+            if self.verbose: Logger.log(a, type=Logger.verbose)
             return a
         else:
             raise Exception("database was not connected")

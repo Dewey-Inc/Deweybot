@@ -4,6 +4,7 @@ from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
+import other.Logger as Logger
 
 import datetime,random
 
@@ -38,8 +39,11 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
                 if message.author.bot: not_allowed.append(message.author.id)
                 else: 
                     if type(message.author) == discord.Member:
+                        if message.author.id in Permissions.permission_tree[Permissions.PERMISSION_GFAD_DISALLOWED-1]["users"]:
+                                not_allowed.append(message.author.id)
+
                         users_roles = [y.id for y in message.author.roles]
-                        for i in Bot.DeweyConfig["kfad-disallowed-roles"]:
+                        for i in Permissions.permission_tree[Permissions.PERMISSION_GFAD_DISALLOWED-1]["roles"]:
                             if i in users_roles:
                                 not_allowed.append(message.author.id)
 
@@ -131,5 +135,45 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         buffer.seek(0)
         await ctx.followup.send(content=f"Qualifiers <t:{round(range_start.timestamp())}>-<t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
 
+if Bot.DeweyConfig["kfad-auto"]:
+    run = datetime.time(hour=20, minute=52, second=30, tzinfo=datetime.timezone(datetime.timedelta(hours=-4),"EDT"))
+
+    @tasks.loop(name="remindme-task",seconds=20)# time=run)
+    async def kfad_task():
+        Logger.log(" [king for a day] im runnninggg", type=Logger.info)
+        godchannel = Bot.client.get_channel(Bot.DeweyConfig["kfad-god-channel"])
+        if godchannel == None: godchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-god-channel"])
+
+        assert not isinstance(godchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "god channel assertion"
+
+        await godchannel.send("Hello! I'm *Dewey*, the one in the electoral college or something. I'm gonna roll a dice!")
+
+        message_requirement = Bot.DeweyConfig["kfad-must-have"]
+        range_now = datetime.datetime.today()
+        range_start = range_now - datetime.timedelta(days=8)
+        range_end = range_now - datetime.timedelta(days=1)
+
+        assert Bot.client.main_guild, "Bot.client.main_guild assertion"
+        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=Bot.client.main_guild,getmembers=True, exclude_prev_gods=True)
+
+        if len(qualifiers) == 0:
+            await godchannel.send(content=f"(There aren't enough people who qualify)", silent=True)
+            return
+        pick = random.choice(qualifiers)
+
+        role = Bot.client.main_guild.get_role(Bot.DeweyConfig["kfad-role"])
+        assert role, "could not find role"
+        for i in role.members:
+            await i.remove_roles(role, reason="god for a day roll")
+        
+        if type(pick) == discord.Member:
+            await pick.add_roles(role,reason="god got a day!!!!")
+
+        await godchannel.send(content=f"{pick.mention} is the Mayor for the Day (until <t:\
+{round((range_now+datetime.timedelta(days=1)).timestamp())}:f>, <t:{round((range_now+datetime.timedelta(days=1)).timestamp())}:R>! to have a chance to be Mayor make sure you're active in the server :)\
+{' (please give role)' if type(pick) == discord.User else ''}", silent=True)
+        
+    
+    Bot.client.on_ready_functions.append(kfad_task.start)
 
 Bot.tree.add_command(gfad_group)

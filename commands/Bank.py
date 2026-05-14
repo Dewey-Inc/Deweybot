@@ -8,6 +8,7 @@ from moneylib.views.doors import DoorsView
 import other.Permissions as Permissions
 from io import BytesIO
 import requests
+import other.Logger as Logger
 
 from moneylib import *
 from moneylib.views import *
@@ -52,7 +53,7 @@ async def buy_image(ctx : discord.Interaction, image : discord.Attachment):
     if user.balance >= 100:
         try:
             test_req = requests.get(Bot.DeweyConfig["obs-integration-post-host"] + "/test")
-            print(test_req.content)
+            Logger.log(test_req.content, type=Logger.verbose)
             
             if test_req.content.decode() == "hello i am dewey_obs":
                 imaaage = BytesIO()
