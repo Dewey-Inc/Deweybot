@@ -34,9 +34,9 @@ permission_tree = {
         "users": [],
         "roles": []
     },
-    PERMISSION_REPEAT: {
-        "name": "PERMISSION_REPEAT",
-        "id": PERMISSION_REPEAT,
+    PERMISSION_GACHA_APPROVE: {
+        "name": "PERMISSION_GACHA_APPROVE",
+        "id": PERMISSION_GACHA_APPROVE,
         "users": [],
         "roles": []
     }
