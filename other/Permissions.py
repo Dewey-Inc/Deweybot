@@ -60,6 +60,9 @@ def banned(ctx: discord.Interaction) -> bool:
     return False
 
 def check_permission(ctx: discord.Interaction,permission:int) -> bool:
+    if not permission == PERMISSION_ADMIN:
+        if check_permission(ctx=ctx, permission=PERMISSION_ADMIN): return True
+        
     if ctx.user.id in permission_tree[permission]["users"]:
         return True
     
