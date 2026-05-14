@@ -478,7 +478,7 @@ async def z_gacha_admin_deletecard(ctx : discord.Interaction, id:int):
 
 @gacha_group.command(name="z-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
 async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved: bool):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_GACHA_APPROVE):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
             _, status = await gachalib.cards.approve_card(approved, card)
@@ -500,7 +500,7 @@ async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord
 
 @gacha_group.command(name="z-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
 async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_GACHA_APPROVE):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
             gachalib.cards.update_card(id, "rarity", rarity)
@@ -512,7 +512,7 @@ async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gach
 
 @gacha_group.command(name="z-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
 async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
+    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_GACHA_APPROVE):
             layout = gachalib.views.unaccepted.UnacceptedView()
             await ctx.response.send_message(
                 view=layout,

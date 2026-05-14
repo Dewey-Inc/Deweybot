@@ -10,8 +10,9 @@ TYPE_MEMBER = 2
 PERMISSION_ADMIN           = 1
 PERMISSION_GFAD_DISALLOWED = 2
 PERMISSION_REPEAT          = 3
+PERMISSION_GACHA_APPROVE   = 4
 
-permission_literal = Literal["PERMISSION_ADMIN", "PERMISSION_GFAD_DISALLOWED", "PERMISSION_REPEAT"]
+permission_literal = Literal["PERMISSION_ADMIN", "PERMISSION_GFAD_DISALLOWED", "PERMISSION_REPEAT", "PERMISSION_GACHA_APPROVE"]
 type_literal       = Literal["TYPE_ROLE", "TYPE_MEMBER"]
 
 permission_tree = {
@@ -24,6 +25,12 @@ permission_tree = {
     PERMISSION_GFAD_DISALLOWED: {
         "name": "PERMISSION_GFAD_DISALLOWED",
         "id": PERMISSION_GFAD_DISALLOWED,
+        "users": [],
+        "roles": []
+    },
+    PERMISSION_REPEAT: {
+        "name": "PERMISSION_REPEAT",
+        "id": PERMISSION_REPEAT,
         "users": [],
         "roles": []
     },
