@@ -36,6 +36,7 @@ kfad-must-have:  # messages
 kfad-role: 
 kfad-channels: []
 kfad-god-channel:  
+kfad-auto: 
 
 # obs integration
 obs-integration-enabled: 
