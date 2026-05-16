@@ -76,8 +76,8 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, day
     if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(days=days+1)
-        range_end = range_now - datetime.timedelta(days=1)
+        range_start = range_now - datetime.timedelta(days=days)
+        range_end = range_now
         
         await ctx.response.defer(ephemeral=False,thinking=True)
 
@@ -107,8 +107,8 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
     if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(days=days+1)
-        range_end = range_now - datetime.timedelta(days=0)
+        range_start = range_now - datetime.timedelta(days=days)
+        range_end = range_now
         
         await ctx.response.defer(ephemeral=False, thinking=True)
 
@@ -171,7 +171,7 @@ if Bot.DeweyConfig["kfad-auto"]:
 
         await godchannel.send(content=f"{pick.mention} is the Mayor for the Day (until <t:\
 {round((range_now+datetime.timedelta(days=1)).timestamp())}:f>, <t:{round((range_now+datetime.timedelta(days=1)).timestamp())}:R>! to have a chance to be Mayor make sure you're active in the server :)\
-{' (please give role)' if type(pick) == discord.User else ''}", silent=True)
+{' (please give role)' if type(pick) == discord.User else ''}")
         
     
     Bot.client.on_ready_functions.append(kfad_task.start)
