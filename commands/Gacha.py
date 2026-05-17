@@ -430,7 +430,7 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 #######################################
 
 @gacha_group.command(name="trade", description="Trade with someone")
-async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
+async def gacha_trade(ctx : discord.Interaction, user:discord.Member|discord.User):
     if not Permissions.check_if_in_main_guid(ctx=ctx): 
         await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
@@ -493,7 +493,7 @@ async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved:
 
 
 @gacha_group.command(name="z-admin-givecard", description="!MOD ONLY! Just give someone a card")
-async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord.Member):
+async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord.Member|discord.User):
     if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
         cardid = gachalib.cards_inventory.give_user_card(user_id=user.id, card_id=id)
         await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
