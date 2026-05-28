@@ -1,10 +1,10 @@
 import io
 import discord
-from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
 import other.Logger as Logger
+import other.Channels as Channels
 
 import datetime,random
 
@@ -18,12 +18,15 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
     not_allowed: list[int] = []
     qualifiers: list[discord.Member | discord.User] = []
 
-    gfad_channels = Bot.DeweyConfig["kfad-channels"]
-    godchannel = Bot.client.get_channel(Bot.DeweyConfig["kfad-god-channel"])
-    if godchannel == None: godchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-god-channel"])
-    
+    gfad_channels_with_type = Channels.get_channels(channeltype=Channels.CHANNEL_GFAD_SEARCH,filtertype=Channels.TYPE_CHANNEL)
+    gfad_channels = []
+    for i in gfad_channels_with_type:
+        gfad_channels.append(i[1])
+    godchannel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_GOD_CHANNEL,filtertype=Channels.TYPE_CHANNEL)[0])
+
     if exclude_prev_gods:
-        assert not isinstance(godchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "god channel assertion"
+        assert isinstance(godchannel,(discord.TextChannel,discord.Thread)), "god channel assertion"
+        assert godchannel
         async for message in godchannel.history(limit=None, before=range_end, after=range_start):
             if not message.author.id in not_allowed:
                 not_allowed.append(message.author.id)
@@ -32,7 +35,7 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
         cool_channel = Bot.client.get_channel(i)
         if cool_channel == None: cool_channel = await Bot.client.fetch_channel(i)
 
-        assert not isinstance(cool_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), f"channel assertion '{i}' did not yeild usable channel"
+        assert not isinstance(cool_channel,(discord.ForumChannel,discord.CategoryChannel,discord.abc.PrivateChannel)), f"channel assertion '{i}' did not yeild usable channel"
         async for message in cool_channel.history(limit=None, before=range_end, after=range_start):
             #just get unique users first
             if not message.author.id in not_allowed:
@@ -141,10 +144,11 @@ if Bot.DeweyConfig["kfad-auto"]:
     @tasks.loop(name="remindme-task", time=run)
     async def kfad_task():
         Logger.log(" [king for a day] im runnninggg", type=Logger.info)
-        godchannel = Bot.client.get_channel(Bot.DeweyConfig["kfad-god-channel"])
-        if godchannel == None: godchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-god-channel"])
+        
+        godchannel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_GOD_CHANNEL,filtertype=Channels.TYPE_CHANNEL)[0])
 
-        assert not isinstance(godchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "god channel assertion"
+        assert isinstance(godchannel,(discord.TextChannel,discord.Thread)), "god channel assertion"
+        assert godchannel
 
         await godchannel.send("Hello! I'm *Dewey*, the one in the electoral college or something. I'm gonna roll a dice!")
 

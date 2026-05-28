@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
+import other.Channels as Channels
 import random
 import re
 
@@ -73,7 +74,7 @@ if Bot.DeweyConfig["suggestions-enabled"]:
     async def suggestions_reaction_message(message: discord.Message):
         if message.author == Bot.client.user:
             pass
-        if message.channel.id == Bot.DeweyConfig["suggestions-channel"] and not message.content.startswith("!"):
+        if message.channel.id == Channels.get_channels(channeltype=Channels.CHANNEL_SUGGESTIONS)[0][1] and not message.content.startswith("!"):
             await message.add_reaction("✅")
             await message.add_reaction("❌")
         return
@@ -84,13 +85,9 @@ if Bot.DeweyConfig["suggestions-enabled"]:
 @discord.app_commands.allowed_installs(guilds=True, users=False)
 async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread | None = None, reply: str = "0"):
     if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN) or Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_REPEAT):
-        if Bot.DeweyConfig["dewey-repeat-log"][0] == "dm":
-            log_channel = await Bot.client.fetch_user(Bot.DeweyConfig["dewey-repeat-log"][1])
-        elif Bot.DeweyConfig["dewey-repeat-log"][0] == "channel":
-            log_channel = await Bot.client.fetch_channel(Bot.DeweyConfig["dewey-repeat-log"][1])
-        else: raise Exception("Dewey config option \"review\" is not set to 'channel' or 'dm'")
+        log_channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_REPEAT_LOG)[0])
 
-        assert not isinstance(log_channel,(discord.ForumChannel,discord.CategoryChannel,Bot.PrivateChannel)), "log channel assertion"
+        assert isinstance(log_channel,(discord.TextChannel,discord.Thread,discord.DMChannel)), "log channel assertion"
 
         _channel = channel
 
@@ -180,7 +177,65 @@ async def list_permission(ctx : discord.Interaction, permission:Permissions.perm
         for i in Permissions.permission_tree[permission_id]["roles"]:
             roles_embed.add_field(name=f"Role", value=f"<@&{i}>")
 
-        await ctx.response.send_message(embeds=[users_embed,roles_embed])
+        await ctx.response.send_message(content=f"Permission for {permission}", embeds=[users_embed,roles_embed])
+
+
+
+
+@admin_group.command(name="add_channel", description="!-ADMIN ONLY-! adds a channel to the channel lists")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def add_channel(ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
+    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+        if channel and user: 
+            await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
+            return 
+        if not channel and not user: 
+            await ctx.response.send_message(content="I'm going to kill you.") # Jokes
+            return 
+
+        a = Channels.add_channel(
+            id=channel.id if channel else user.id if user else -1,
+            channeltype=Channels.TYPE_DM if user else Channels.TYPE_CHANNEL if channel else -1,
+            type=typing.get_args(Channels.channel_literal).index(type)+1,
+            temp=False
+        )
+
+        await ctx.response.send_message(content="Success" if a else "Malfunction")
+
+@admin_group.command(name="remove_channel", description="!-ADMIN ONLY-! removes a channel from the channel lists")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def remove_channel(ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
+    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+        if channel and user: 
+            await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
+            return 
+        if not channel and not user: 
+            await ctx.response.send_message(content="I'm going to kill you.") # Jokes
+            return 
+
+        a = Channels.remove_channel(
+            id=channel.id if channel else user.id if user else -1,
+            channeltype=Channels.TYPE_DM if user else Channels.TYPE_CHANNEL if channel else -1,
+            type=typing.get_args(Channels.channel_literal).index(type)+1,
+            temp=False
+        )
+
+        await ctx.response.send_message(content="Success" if a else "Malfunction")
+
+@admin_group.command(name="list_channel", description="!-ADMIN ONLY-! list channels with a type")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def list_channel(ctx : discord.Interaction, type: Channels.channel_literal):
+    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+        channel_type_id = typing.get_args(Channels.channel_literal).index(type)+1
+        dm_embed = discord.Embed(title="Dms", description="ok")
+        channels_embed = discord.Embed(title="Channels", description="like actually whatever")
+
+        for i in Channels.channel_tree[channel_type_id]["dm"]:
+            dm_embed.add_field(name=f"Dms", value=f"<@{i}>")
+        for i in Channels.channel_tree[channel_type_id]["channel"]:
+            channels_embed.add_field(name=f"Role", value=f"<#{i}>")
+
+        await ctx.response.send_message(content=f"Channels for {type}", embeds=[dm_embed,channels_embed])
 
 
 Bot.tree.add_command(admin_group)

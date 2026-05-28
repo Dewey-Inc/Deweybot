@@ -72,6 +72,13 @@ DeweyPermissionsTables: tablestype = [
         ("permission",      "BIGINT"),
     ]),
 ]
+DeweyChannelsTables: tablestype = [
+    ("channels", [
+        ("id",              "BIGINT"),
+        ("channeltype",     "BIGINT"),
+        ("type",            "BIGINT"),
+    ]),
+]
 
 def makeCreateStatement(table:tabletype) -> str:
     fields = ""
@@ -99,6 +106,8 @@ if __name__ == "__main__":
     for i in SettingsTables:
         definitions.append(makeCreateStatement(table=i))
     for i in DeweyPermissionsTables:
+        definitions.append(makeCreateStatement(table=i))
+    for i in DeweyChannelsTables:
         definitions.append(makeCreateStatement(table=i))
 
     #print(definitions)

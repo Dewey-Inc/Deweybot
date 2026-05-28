@@ -4,6 +4,7 @@ from PIL.ImageFont import Layout
 import Bot
 import gachalib.views.buy_packs
 import other.Permissions as Permissions
+import other.Channels as Channels
 
 import discord
 from discord.abc import PrivateChannel
@@ -95,13 +96,8 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
         await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
     if not Permissions.banned(ctx):
-        if Bot.DeweyConfig["review"][0] == "dm":
-            approval_channel = await Bot.client.fetch_user(Bot.DeweyConfig["review"][1])
-        elif Bot.DeweyConfig["review"][0] == "channel":
-            approval_channel = await Bot.client.fetch_channel(Bot.DeweyConfig["review"][1])
-        else: raise Exception("Dewey config option \"review\" is not set to 'channel' or 'dm'")
+        approval_channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_CARD_REVIEWS)[0])
 
-        
         a = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="gacha",values=['id']), parameters=())
         if len(a) == 0:
             next_id = 1
@@ -160,7 +156,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
             title="gacha request!!", description=f"New request for a gacha card from <@{ctx.user.id}> (id = {next_id})"
             )
         message_view = gachalib.views.request.RequestView()
-        assert not isinstance(approval_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "approval channel assertion"
+        assert isinstance(approval_channel,(discord.TextChannel,discord.Thread,discord.DMChannel)), "approval channel assertion"
         message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view)
 
         gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id)
@@ -189,11 +185,7 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
         await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
         return
     if not Permissions.banned(ctx):
-        if Bot.DeweyConfig["review"][0] == "dm":
-            approval_channel = await Bot.client.fetch_user(Bot.DeweyConfig["review"][1])
-        elif Bot.DeweyConfig["review"][0] == "channel":
-            approval_channel = await Bot.client.fetch_channel(Bot.DeweyConfig["review"][1])
-        else: raise Exception("Dewey config option \"review\" is not set to 'channel' or 'dm'")
+        approval_channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_CARD_REVIEWS)[0])
 
         success, card = gachalib.cards.get_card_by_id(id)
 
@@ -216,7 +208,7 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
                 title="gacha EDIT request!!", description=f"New EDIT request for a gacha card from <@{ctx.user.id}> (id = {id})"
                 )
                 message_view = gachalib.views.request.RequestView()
-                assert not isinstance(approval_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "approval channel assertion"
+                assert isinstance(approval_channel,(discord.TextChannel,discord.Thread,discord.DMChannel)), "approval channel assertion"
                 message_view.message = await approval_channel.send(embed=embed,view=message_view)
                 gachalib.cards.update_card(id,"request_message_id",message_view.message.id)
         else:

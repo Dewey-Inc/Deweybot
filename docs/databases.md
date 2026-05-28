@@ -99,3 +99,13 @@ One Dewey database has several tables, and their contents are as follows:
 |id               |BIGINT      |Discord Snowflake|
 |type             |BIGINT      |1 for role, 2 for member|
 |permission       |BIGINT      |1 for admin type (permission override), 2 for GFAD disallowed role, 3 for dewey repeat users, may be appended later, 4 for card approver|
+
+
+### "channels"
+| Dewey Useful channels, i.e GFAD search channel, review channel
+
+| Name | Type | Use |
+|------|------|-----|
+|id               |BIGINT      |Discord Snowflake|
+|channeltype      |BIGINT      |1 for DMs, 2 for normal channel|
+|type             |BIGINT      |1 for GFAD search channel (CHANNEL ONLY), 2 for channel to send card reviews to, 3 for error channel, 4 for god's channel (CHANNEL ONLY), 5 for dewey's repeat log|

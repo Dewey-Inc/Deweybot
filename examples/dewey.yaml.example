@@ -1,6 +1,5 @@
 # Bot misc
 token: 
-error-channel: # channel to log errors to
 main-guild:
 
 banned-role: # optional
@@ -17,7 +16,6 @@ dewey-sqlite-path:
 
 # Gacha settings
 gacha_enabled: 
-review: ["",] # [type, id] Set type to "channel" or "dm" and id to a channel id or user id 
 imageurl: # URL where uploaded images are saved 
 image-save-path: # where image should go
 roll-timeout:  # seconds
@@ -25,7 +23,6 @@ gacha-reminder-task:
 
 # suggestions
 suggestions_enabled: 
-suggestions-channel: # suggestions channel
 
 # deweycoins
 deweycoins-enabled: 
@@ -34,8 +31,6 @@ deweycoins-enabled:
 kfad-enabled: 
 kfad-must-have:  # messages
 kfad-role: 
-kfad-channels: []
-kfad-god-channel:  
 kfad-auto: 
 
 # obs integration
@@ -51,7 +46,6 @@ gif-enabled:
 reminders-enabled: 
 grok-responses: 
 warf-reactions: 
-dewey-repeat-log: # [type, id] Set type to "channel" or "dm" and id to a channel id or user id
 
 
 emoji-dewey: "" # Emoji that you would type <:Name:ID>

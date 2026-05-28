@@ -7,7 +7,7 @@ if __name__ == "__main__":
 import io
 from types import CoroutineType, FunctionType, MethodType
 import discord
-from discord.ext import tasks
+from discord.ext import tasks, commands
 from discord.abc import PrivateChannel
 from yaml import load,Loader
 import traceback
@@ -31,6 +31,7 @@ import db_lib
 Deweybase = db_lib.setup_db(name="dewey")
 
 import other.Permissions as Permissions
+import other.Channels as Channels
 import other.Settings as Settings
 
 class botClient(discord.Client):
@@ -38,20 +39,21 @@ class botClient(discord.Client):
         super().__init__(intents = discord.Intents.all())
         self.main_guild: discord.Guild | None
         self.synced = False
+        self.already_ran_once = False
         self.on_ready_functions: list[MethodType | FunctionType] = []
         self.on_message_functions: list[CoroutineType | FunctionType] = []
 
     async def on_ready(self):
-        for i in self.on_ready_functions:
-            if isinstance(i, (MethodType, FunctionType)):
-                Logger.log(f" [on_ready] running on_ready_function of {i.__name__}", type=Logger.info)
-                if iscoroutinefunction(i):
-                    await i.__call__()
-                else:
-                    i.__call__()
+        if not self.already_ran_once:
+            for i in self.on_ready_functions:
+                if isinstance(i, (MethodType, FunctionType)):
+                    Logger.log(f" [on_ready] running on_ready_function of {i.__name__}", type=Logger.info)
+                    if iscoroutinefunction(i):
+                        await i.__call__()
+                    else:
+                        i.__call__()
 
         self.main_guild = self.get_guild(DeweyConfig["main-guild"])
-
 
         await self.wait_until_ready()
         if not self.synced:
@@ -62,6 +64,7 @@ class botClient(discord.Client):
 
 
         Logger.log(f" [on_ready] Dewey'd as {self.user}", type=Logger.info)
+        self.already_ran_once = True
 
 
     async def on_message(self, message: discord.Message):
@@ -72,7 +75,7 @@ class botClient(discord.Client):
 
     async def on_raw_reaction_add(self, reactionpayload: discord.RawReactionActionEvent):
         # remove conflicting vote reactions
-        if reactionpayload.channel_id == DeweyConfig["suggestions-channel"] and DeweyConfig["suggestions-enabled"]:
+        if reactionpayload.channel_id == Channels.get_channels(channeltype=Channels.CHANNEL_SUGGESTIONS)[0][1] and DeweyConfig["suggestions-enabled"]:
             if not reactionpayload.emoji.name in ["✅","❌"]: return
             assert self.user, "user is none"
             if reactionpayload.user_id == self.user.id: return
@@ -97,14 +100,13 @@ class botClient(discord.Client):
     async def on_error(self, event, error = None):
         a = traceback.format_exc()
         Logger.log(a, type=Logger.error)
-        channel = await client.fetch_channel(DeweyConfig["error-channel"])
+        channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_ERRORS)[0])
         buffer = io.BytesIO()
         buffer.write(a.encode())
         buffer.seek(0)
-        assert not isinstance(channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "error channel assertion"
+        assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
         await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n",file=discord.File(fp=buffer,filename="error.txt"))
         buffer.close()
-
 
 
 client = botClient()
@@ -115,11 +117,11 @@ tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_com
 async def on_app_command_error(interaction: discord.Interaction, error):
     a = traceback.format_exc()
     Logger.log(a, type=Logger.error)
-    channel = await client.fetch_channel(DeweyConfig["error-channel"])
+    channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_ERRORS)[0])
     buffer = io.BytesIO()
     buffer.write(a.encode())
     buffer.seek(0)
-    assert not isinstance(channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "error channel assertion"
+    assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
     await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt"))
     buffer.close()
     
