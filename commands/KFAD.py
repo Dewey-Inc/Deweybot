@@ -154,7 +154,7 @@ if Bot.DeweyConfig["kfad-auto"]:
 
         message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(days=7)
+        range_start = range_now - datetime.timedelta(days=14)
         range_end = range_now
 
         assert Bot.client.main_guild, "Bot.client.main_guild assertion"
