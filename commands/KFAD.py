@@ -201,6 +201,7 @@ async def setup(bot:commands.Bot):
 
     cog = GodCog(bot=bot)
     await bot.add_cog(cog)
+    thecog = bot.get_cog("kfad")
 
     if Bot.DeweyConfig["kfad-auto"]:
         if not cog.kfad_task.is_running():
@@ -208,14 +209,3 @@ async def setup(bot:commands.Bot):
 
 async def teardown(bot:commands.Bot):
     Logger.log("Hi I am exiting the kfad extension", type=Logger.info)
-
-    thecog = bot.get_cog(GodCog.__name__)
-    if thecog:
-        if Bot.DeweyConfig["kfad-auto"]:
-            if thecog.kfad_task.is_running():
-                thecog.kfad_task.stop()
-
-        await bot.remove_cog(GodCog.__name__)
-    
-    else:
-        Logger.log("* (I guess the kfad cog wasn't open)")

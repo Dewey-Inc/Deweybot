@@ -44,4 +44,3 @@ async def setup(bot:commands.Bot):
 
 async def teardown(bot):
     print("Hi I am exiting the settings extension")
-    await bot.remove_cog(SettingsCog.__name__)
