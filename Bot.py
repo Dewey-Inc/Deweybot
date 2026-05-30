@@ -115,17 +115,26 @@ tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_com
 
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error):
-    a = traceback.format_exc()
-    Logger.log(a, type=Logger.error)
-    channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_ERRORS)[0])
-    buffer = io.BytesIO()
-    buffer.write(a.encode())
-    buffer.seek(0)
-    assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
-    await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt"))
-    buffer.close()
-    
-    await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
+    async def inform(ctx:discord.Interaction,message:str,ephemeral:bool=True):
+        if ctx.response.is_done():
+            await ctx.followup.send(content=message)
+        else:
+            await ctx.response.send_message(content=message)
+        
+    if isinstance(error, discord.app_commands.errors.CheckFailure):
+        await inform(ctx=interaction, message="Yo. You not part of the \"Gang\"",ephemeral=True)
+    else:
+        a = traceback.format_exc()
+        Logger.log(a, type=Logger.error)
+        channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_ERRORS)[0])
+        buffer = io.BytesIO()
+        buffer.write(a.encode())
+        buffer.seek(0)
+        assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
+        await channel.send(f"<@322495136108118016> got an report for you boss (FROM ON_APP_COMMAND_ERROR)\n",file=discord.File(fp=buffer,filename="error.txt"))
+        buffer.close()
+        
+        await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
 
 if DeweyConfig["nick-enabled"]: import commands.Nick
 if DeweyConfig["gacha-enabled"]: import commands.Gacha
