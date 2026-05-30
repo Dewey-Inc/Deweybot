@@ -1,90 +1,182 @@
 
 import typing
 
-import discord
-from discord.ext import commands, tasks
 import Bot
+import discord
+from discord.app_commands import AppCommandError
+from discord.ext import commands, tasks
 import other.Permissions as Permissions
 import other.Channels as Channels
+import other.Logger as Logger
+
+if Bot.DeweyConfig["gacha-enabled"]: # pylance doesn't like these and thinks they are possibly unbound
+    import gachalib
+if Bot.DeweyConfig["reminders-enabled"]:
+    import other.Remindme as Remindme
+if Bot.DeweyConfig["gif-enabled"]:
+    import other.gif as gif
+
 import random
 import re
 
+class OtherCog(commands.cog.GroupCog, name="other"):
+    def __init__(self, bot):
+        self.bot = bot
+        #self._last_member = None
 
-admin_group = discord.app_commands.Group(name="z-admin-other", description="g")
+    async def cog_load(self):
+        print("Other Cog Dewin' it")
 
-if Bot.DeweyConfig["reminders-enabled"]:
-    import other.Remindme as Remindme
-
-    
-    @Bot.tree.command(name="remindme", description="Get a DM after X amount of time !")
-    async def remindme(ctx : discord.Interaction, weeks:int=0, days:int=0, hours:int=0, minutes:int=0, note: str = ""):
-        if weeks == 0 and days == 0 and hours == 0 and minutes == 0:
-            await ctx.response.send_message("you have to select a time", ephemeral=True)
-            return
-        if len(note) > 256:
-            await ctx.response.send_message("you should shorten your note")
-            return
-
-        now = Remindme.datetime.datetime.today()
-        delta = Remindme.datetime.timedelta(weeks=weeks, days=days, hours=hours, minutes=minutes)
-        when = round((now+delta).timestamp())
-
-        message = await ctx.response.send_message("I'll dm you on " + str(now+delta) + f" (<t:{when}>) ")
-        
-        Remindme.setReminder(uid=ctx.user.id,made=round(now.timestamp()),when=when,note=note,message=message.message_id,guild=ctx.guild_id,channel=ctx.channel_id)
-        Remindme.getReminders()
-
-responses = [
-    "It is certain", "Reply hazy, try again", "Don't count on it",
-    "It is decidedly so", "Ask again later", "My reply is no",
-    "Without a doubt", "Better not tell you now", "My sources say no",
-    "Yes definitely", "Cannot predict now", "Outlook not so good",
-    "You may rely on it", "Concentrate and ask again", "Very doubtful",
-    "As I see it, yes",
-    "Most likely",
-    "Outlook good",
-    "Yes",
-    "Signs point to yes"
-]
+    @commands.Cog.listener()
+    async def on_message(self, message):
 
 
-if Bot.DeweyConfig["warf-reactions"]:
-    async def warf_react(message: discord.Message):
-        assert Bot.client.user
-        if "warf" in message.content.lower():
-            emoji = Bot.client.get_emoji(Bot.DeweyConfig["emoji-warf"])
-            if not emoji:
-                raise ValueError("emoji-warf is not a valid emoji ID")
-            else:
-                await message.add_reaction(emoji)
-    Bot.client.on_message_functions.append(warf_react)
+        # Grog responses
+        if Bot.DeweyConfig["grok-responses"]:
+            if re.search(f"(@?grok|@?gork)", message.content.lower()):
+                if random.random() < 0.02:
+                    await message.reply("oh poor baby 🥺🥺 do you need the robot to make you pictures? 🥺🥺 yeah? 🥺🥺 do you need the bo-bot to write you essay too? yeah ??? you can't do it?? 🥺🥺 you're a moron??🥺🥺 do you need chat gpt to fuck your wife ?? 🥺🥺🥺")
+                else:
+                    await message.reply(random.choice([
+                        "It is certain", "Reply hazy, try again", "Don't count on it",
+                        "It is decidedly so", "Ask again later", "My reply is no",
+                        "Without a doubt", "Better not tell you now", "My sources say no",
+                        "Yes definitely", "Cannot predict now", "Outlook not so good",
+                        "You may rely on it", "Concentrate and ask again", "Very doubtful",
+                        "As I see it, yes",
+                        "Most likely",
+                        "Outlook good",
+                        "Yes",
+                        "Signs point to yes"
+                    ]))
 
-if Bot.DeweyConfig["grok-responses"]:
-    async def grok_response_message(message: discord.Message):
-        assert Bot.client.user
-        if re.search(f"(@?grok|@?gork)", message.content.lower()):
-            if random.random() < 0.02:
-                await message.reply("oh poor baby 🥺🥺 do you need the robot to make you pictures? 🥺🥺 yeah? 🥺🥺 do you need the bo-bot to write you essay too? yeah ??? you can't do it?? 🥺🥺 you're a moron??🥺🥺 do you need chat gpt to fuck your wife ?? 🥺🥺🥺")
-            else:
-                await message.reply(random.choice(responses))
-            return
-    Bot.client.on_message_functions.append(grok_response_message)
+            
+        # Warf reactions
+        if Bot.DeweyConfig["warf-reactions"]:
+            if "warf" in message.content.lower():
+                emoji = Bot.client.get_emoji(Bot.DeweyConfig["emoji-warf"])
+                if not emoji:
+                    raise ValueError("emoji-warf is not a valid emoji ID")
+                else:
+                    await message.add_reaction(emoji)
 
-if Bot.DeweyConfig["suggestions-enabled"]:
-    async def suggestions_reaction_message(message: discord.Message):
-        if message.author == Bot.client.user:
-            pass
-        if message.channel.id == Channels.get_channels(channeltype=Channels.CHANNEL_SUGGESTIONS)[0][1] and not message.content.startswith("!"):
-            await message.add_reaction("✅")
-            await message.add_reaction("❌")
+        # Suggestion reactions
+        if Bot.DeweyConfig["suggestions-enabled"]:
+            if message.channel.id == Channels.get_channels(channeltype=Channels.CHANNEL_SUGGESTIONS)[0][1] and not message.content.startswith("!"):
+                await message.add_reaction("✅")
+                await message.add_reaction("❌")
         return
-    Bot.client.on_message_functions.append(suggestions_reaction_message)
+
+            
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
 
 
-@admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread | None = None, reply: str = "0"):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN) or Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_REPEAT):
+    if Bot.DeweyConfig["gif-enabled"]:
+        @discord.app_commands.command(name="house", description="house dr house md car accident funny gifs")
+        @discord.app_commands.allowed_installs(guilds=True, users=True)
+        async def house(self, ctx : discord.Interaction, text: str):
+            if not Permissions.banned(ctx):
+                await ctx.response.defer(thinking=True)
+                
+                image_file = discord.File(gif.gen(text),filename=f"{text.replace(" ", "_")[0:32]}.gif")
+                await ctx.followup.send(file=image_file)
+            else:
+                await ctx.response.send_message(
+                    f"You will be destroyed for your crimes.", ephemeral=True
+                )
+
+
+    if Bot.DeweyConfig["reminders-enabled"]:
+        @discord.app_commands.command(name="remindme", description="Get a DM after X amount of time !")
+        async def remindme(self, ctx : discord.Interaction, weeks:int=0, days:int=0, hours:int=0, minutes:int=0, note: str = ""):
+            if weeks == 0 and days == 0 and hours == 0 and minutes == 0:
+                await ctx.response.send_message("you have to select a time", ephemeral=True)
+                return
+            if len(note) > 256:
+                await ctx.response.send_message("you should shorten your note")
+                return
+            
+            now = Remindme.datetime.datetime.today()
+            delta = Remindme.datetime.timedelta(weeks=weeks, days=days, hours=hours, minutes=minutes)
+            when = round((now+delta).timestamp())
+
+            message = await ctx.response.send_message("I'll dm you on " + str(now+delta) + f" (<t:{when}>) ")
+                    
+            Remindme.setReminder(uid=ctx.user.id,made=round(now.timestamp()),when=when,note=note,message=message.message_id,guild=ctx.guild_id,channel=ctx.channel_id)
+            Remindme.getReminders()
+
+    if Bot.DeweyConfig["nick-enabled"]:
+        @discord.app_commands.command(name="nickname", description="Change someone's nickname")
+        @discord.app_commands.allowed_installs(guilds=True, users=False)
+        async def nickname(self, ctx : discord.Interaction, user: discord.Member | discord.User | None = None, nickname: str | None = None):
+            try:
+                if user == None:
+                    user = ctx.user
+                assert type(user) == discord.Member
+                
+                previous = user.nick
+                await user.edit(nick=nickname)
+                await ctx.response.send_message(
+                    f"{Bot.DeweyConfig["emoji-dewey"]} Dewey blast! {Bot.DeweyConfig["emoji-dewey"]} (name changed `{previous}` -> `{nickname}`)", ephemeral=False
+                )
+            except Exception as e:
+                if "403" in str(e):
+                    await ctx.response.send_message(
+                        "You cannot nick the server owner (403 error)", ephemeral=True
+                    )
+                elif "400" in str(e):
+                    await ctx.response.send_message(
+                        str(e), ephemeral=True
+                    )
+                else:
+                    raise e
+
+
+    @discord.app_commands.command(name="version", description="What version am I?")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    async def version(self, ctx):
+        await ctx.response.send_message(
+            f"Yo yo yo man, its the big dewbert!\n{Bot.version}", ephemeral=True
+        )
+
+    @discord.app_commands.command(name="sexer", description="Sexer")
+    @discord.app_commands.allowed_installs(guilds=True, users=True)
+    async def sexer(self, ctx):
+        sexer = open("other/ytp_sexer.mp4", "rb")
+        await ctx.response.send_message(file=discord.File(fp=sexer, filename="sexer.mp4"))
+        sexer.close()
+
+    #@discord.app_commands.command(name="Testcommand", description="echo test")
+    #async def self(self, ctx : discord.Interaction, test_argument: str):
+    #    await ctx.response.send_message(
+    #        test_argument, ephemeral=True
+    #    )
+
+
+
+class AdminOtherCog(commands.cog.GroupCog, name="z-admin-other"):
+    def __init__(self, bot):
+        self.bot = bot
+
+    async def cog_load(self):
+        print("Admin Other Cog Dewin' it")
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
+    
+
+    @discord.app_commands.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.repeat_check)
+    async def adminrepeat(self, ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread | None = None, reply: str = "0"):
         log_channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_REPEAT_LOG)[0])
 
         assert isinstance(log_channel,(discord.TextChannel,discord.Thread,discord.DMChannel)), "log channel assertion"
@@ -109,65 +201,51 @@ async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discor
         )
         await log_channel.send(f"{ctx.user.name} said `{what_said}`")
 
-if Bot.DeweyConfig["gacha-enabled"]:
-    import gachalib
-    if Bot.DeweyConfig["gacha-reminder-task"]:
-        @admin_group.command(name="start-reminder-task", description="!-ADMIN ONLY-! restart reminder task")
-        @discord.app_commands.allowed_installs(guilds=True, users=False)
-        async def reminder_task(ctx : discord.Interaction):
-            if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-                if not gachalib.reminder_task.is_running():
-                    gachalib.reminder_task.start()
-                    await ctx.response.send_message(
-                        f"okay!", ephemeral=True
-                    )
-                else:
-                    await ctx.response.send_message(
-                        f"its running already", ephemeral=True
-                    )
-        @admin_group.command(name="check-reminder-task", description="!-ADMIN ONLY-! check if reminder task running")
-        @discord.app_commands.allowed_installs(guilds=True, users=False)
-        async def check_reminder_task(ctx : discord.Interaction):
-            if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-                await ctx.response.send_message(
-                    gachalib.reminder_task.is_running(), ephemeral=True
-                )
+    # Won't work because of how the new system works with the tasks being defined inside the command files
+    #if Bot.DeweyConfig["gacha-enabled"]:
+    #    if Bot.DeweyConfig["gacha-reminder-task"]:
+    #        @discord.app_commands.command(name="start-reminder-task", description="!-ADMIN ONLY-! restart reminder task")
+    #        @discord.app_commands.allowed_installs(guilds=True, users=False)
+    #        @discord.app_commands.check(predicate=Permissions.admin_check)
+    #        async def reminder_task(self, ctx : discord.Interaction):
+    #            if not Bot.botClient.get:
+    #                gachalib.reminder_task.start()
+    #                await ctx.response.send_message(
+    #                    f"okay!", ephemeral=True
+    #                )
+    #            else:
+    #                await ctx.response.send_message(
+    #                    f"its running already", ephemeral=True
+    #                )
+    #        @discord.app_commands.command(name="check-reminder-task", description="!-ADMIN ONLY-! check if reminder task running")
+    #        @discord.app_commands.allowed_installs(guilds=True, users=False)
+    #        @discord.app_commands.check(predicate=Permissions.admin_check)
+    #        async def check_reminder_task(self, ctx : discord.Interaction):
+    #            await ctx.response.send_message(
+    #                gachalib.reminder_task.is_running(), ephemeral=True
+    #            )
 
 
-@Bot.tree.command(name="version", description="What version am I?")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def version(ctx : discord.Interaction):
-    await ctx.response.send_message(
-        f"Yo yo yo man, its the big dewbert!\n{Bot.version}", ephemeral=True
-    )
-
-@Bot.tree.command(name="sexer", description="Sexer")
-@discord.app_commands.allowed_installs(guilds=True, users=True)
-async def sexer(ctx : discord.Interaction):
-    sexer = open("other/ytp_sexer.mp4", "rb")
-    await ctx.response.send_message(file=discord.File(fp=sexer, filename="sexer.mp4"))
-    sexer.close()
-
-
-
-@admin_group.command(name="assign_permission", description="!-ADMIN ONLY-! assign someone a permission")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def assign_permission(ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+    @discord.app_commands.command(name="assign_permission", description="!-ADMIN ONLY-! assign someone a permission")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.admin_check)
+    async def assign_permission(self, ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
         a = Permissions.add_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
         await ctx.response.send_message(content="Success" if a else "Malfunction")
 
-@admin_group.command(name="remove_permission", description="!-ADMIN ONLY-! remove permission from someone")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def remove_permission(ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+
+    @discord.app_commands.command(name="remove_permission", description="!-ADMIN ONLY-! remove permission from someone")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.admin_check)
+    async def remove_permission(self, ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
         a = Permissions.remove_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
         await ctx.response.send_message(content="Success" if a else "Malfunction")
 
-@admin_group.command(name="list_permission", description="!-ADMIN ONLY-! list everyone with a permission")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def list_permission(ctx : discord.Interaction, permission:Permissions.permission_literal):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+
+    @discord.app_commands.command(name="list_permission", description="!-ADMIN ONLY-! list everyone with a permission")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.admin_check)
+    async def list_permission(self, ctx : discord.Interaction, permission:Permissions.permission_literal):
         permission_id = typing.get_args(Permissions.permission_literal).index(permission)+1
         users_embed = discord.Embed(title="Users", description="ok")
         roles_embed = discord.Embed(title="Roles", description="ok")
@@ -180,12 +258,10 @@ async def list_permission(ctx : discord.Interaction, permission:Permissions.perm
         await ctx.response.send_message(content=f"Permission for {permission}", embeds=[users_embed,roles_embed])
 
 
-
-
-@admin_group.command(name="add_channel", description="!-ADMIN ONLY-! adds a channel to the channel lists")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def add_channel(ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+    @discord.app_commands.command(name="add_channel", description="!-ADMIN ONLY-! adds a channel to the channel lists")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.admin_check)
+    async def add_channel(self, ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
         if channel and user: 
             await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
             return 
@@ -202,10 +278,11 @@ async def add_channel(ctx : discord.Interaction, type: Channels.channel_literal,
 
         await ctx.response.send_message(content="Success" if a else "Malfunction")
 
-@admin_group.command(name="remove_channel", description="!-ADMIN ONLY-! removes a channel from the channel lists")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def remove_channel(ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+
+    @discord.app_commands.command(name="remove_channel", description="!-ADMIN ONLY-! removes a channel from the channel lists")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.admin_check)
+    async def remove_channel(self, ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
         if channel and user: 
             await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
             return 
@@ -222,10 +299,11 @@ async def remove_channel(ctx : discord.Interaction, type: Channels.channel_liter
 
         await ctx.response.send_message(content="Success" if a else "Malfunction")
 
-@admin_group.command(name="list_channel", description="!-ADMIN ONLY-! list channels with a type")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
-async def list_channel(ctx : discord.Interaction, type: Channels.channel_literal):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
+
+    @discord.app_commands.command(name="list_channel", description="!-ADMIN ONLY-! list channels with a type")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.admin_check)
+    async def list_channel(self, ctx : discord.Interaction, type: Channels.channel_literal):
         channel_type_id = typing.get_args(Channels.channel_literal).index(type)+1
         dm_embed = discord.Embed(title="Dms", description="ok")
         channels_embed = discord.Embed(title="Channels", description="like actually whatever")
@@ -237,5 +315,67 @@ async def list_channel(ctx : discord.Interaction, type: Channels.channel_literal
 
         await ctx.response.send_message(content=f"Channels for {type}", embeds=[dm_embed,channels_embed])
 
+    
+    #@discord.app_commands.command(name="requires-staff", description="permission test")
+    #async def self(self, ctx : discord.Interaction):
+    #    has_perms = Permissions.has_permission(ctx=ctx,allowed=["staff"])
+    #    Logger.log(has_perms, type=Logger.verbose)
+    #    if has_perms:
+    #        await ctx.response.send_message(
+    #            f"ok", ephemeral=False
+    #        )
+    #    else:
+    #        await ctx.response.send_message(
+    #            f"not ok :(", ephemeral=False
+    #        )
+            
 
-Bot.tree.add_command(admin_group)
+if Bot.DeweyConfig["reminders-enabled"]:
+    @tasks.loop(name="remindme-task", minutes=1)
+    async def remindme_task():
+        Logger.log(" [EVIL REMINDER TASK] im runnninggg")
+        reminders = Remindme.getReminders()
+        reminder_qualifiers:list[Remindme.Reminder] = []
+
+        timestamp = round(Remindme.datetime.datetime.now().timestamp())
+        for user in reminders:
+            if timestamp > user.when:
+                reminder_qualifiers.append(user)
+
+        
+        for i in reminder_qualifiers:
+            try:
+                user = Bot.client.get_user(i.uid)
+                if user == None: user = await Bot.client.fetch_user(i.uid)
+                dm_channel = user.dm_channel
+                if not dm_channel: dm_channel = await user.create_dm()
+                
+                await dm_channel.send(content=f"""Hello I'm here to remind you of a thing you left on <t:{i.made}> for <t:{i.when}>{f" (https://discord.com/channels/{i.guild}/{i.channel}/{i.message})" if i.guild and i.channel and i.message else ""}
+{f"```{i.note}```" if i.note else ""}""")
+            except discord.errors.Forbidden:
+                pass
+
+            #set the timeout to -2 so they don't qualify again (we don't dm them again)
+            Remindme.removeReminder(uid=i.uid,when=i.when,made=i.made,messageid=i.message)
+
+
+
+async def setup(bot:commands.Bot):
+    print("Hi I am the other extension")
+
+    if Bot.DeweyConfig["reminders-enabled"]:
+        if not remindme_task.is_running():
+            remindme_task.start()
+
+    await bot.add_cog(OtherCog(bot=bot))
+    await bot.add_cog(AdminOtherCog(bot=bot))
+
+async def teardown(bot):
+    print("Hi I am exiting the other extension")
+
+    if Bot.DeweyConfig["reminders-enabled"]:
+        if remindme_task.is_running():
+            remindme_task.stop()
+
+    await bot.remove_cog(OtherCog.__name__)
+    await bot.add_cog(AdminOtherCog.__name__)

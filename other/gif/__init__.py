@@ -3,9 +3,9 @@ from math import ceil
 from PIL import Image, ImageDraw, ImageSequence, ImageFont, ImageOps
 import io, textwrap
 
-newGif = Image.open('./gif/base.gif')
-oldGif = Image.open('./gif/old.gif')
-font = ImageFont.truetype('./gif/Futura Extra Bold Condensed.otf', 30)
+newGif = Image.open('./other/gif/base.gif')
+oldGif = Image.open('./other/gif/old.gif')
+font = ImageFont.truetype('./other/gif/Futura Extra Bold Condensed.otf', 30)
 
 def isLonger(text):
     text = textwrap.fill(text, 20)
