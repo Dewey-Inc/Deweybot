@@ -42,12 +42,6 @@ permission_tree = {
     }
 }
 
-
-def admin_check(ctx:discord.Interaction) -> bool:                      return check_permission(ctx=ctx, permission=PERMISSION_ADMIN)
-def gfad_disallowed_check(ctx:discord.Interaction) -> bool:            return check_permission(ctx=ctx, permission=PERMISSION_GFAD_DISALLOWED)
-def repeat_check(ctx:discord.Interaction) -> bool:                     return check_permission(ctx=ctx, permission=PERMISSION_REPEAT)
-def gacha_approve_check(ctx:discord.Interaction) -> bool:              return check_permission(ctx=ctx, permission=PERMISSION_GACHA_APPROVE)
-
 permissions = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="permissions", values=["id","type","permission"]))
 
 #[y.id for y in ctx.user.roles]

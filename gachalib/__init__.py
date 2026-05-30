@@ -50,6 +50,48 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
         return rarity_costs[card.rarity]
 
 
+if Bot.DeweyConfig["gacha-reminder-task"]:
+    @tasks.loop(name="reminder-task", minutes=1)
+    async def reminder_task():
+        start = gachalib.gacha_user.get_timestamp()
+
+        everyone_with_timeout = gachalib.gacha_user.get_everyone_with_timeouts()
+        qualifiers_to_dm = []
+
+        for user in everyone_with_timeout:
+            setting = gacha_settings.get_setting(uid=user.user_id,name="roll_reminder_dm")
+
+            if setting == 1:
+                timestamp = gachalib.gacha_user.get_timestamp()
+                time_out = Bot.DeweyConfig["roll-timeout"]
+                if (timestamp - user.last_use) > (time_out) and not user.last_use == -2:
+                    qualifiers_to_dm.append(user.user_id)
+
+        
+        for i in qualifiers_to_dm:
+            try:
+                user = Bot.client.get_user(i)
+                if user == None: user = await Bot.client.fetch_user(i)
+
+                dm_channel = user.dm_channel
+
+                if not dm_channel: dm_channel = await user.create_dm()
+                
+                await dm_channel.send("Hey, it's me again, Dewey. You can roll your Gacha again.\n-# you can disable this... `/gacha settings roll-reminders`")
+            except discord.errors.Forbidden:
+                pass
+            
+            #set the timeout to -2 so they don't qualify again (we don't dm them again)
+            gachalib.gacha_user.set_user_timeout(user_id=i,unix_time=-2)
+        end = gachalib.gacha_user.get_timestamp()
+        #Logger.log(f" [reminder_task] took {round(end-start)}s", type=Logger.verbose)
+    
+    async def start_task():
+        if not gachalib.reminder_task.is_running():
+            gachalib.reminder_task.start()
+    
+    Bot.client.on_ready_functions.append(gachalib.start_task)
+
 def get_small_filename(card: gachalib.types.Card):
     filename = card.filename.split(".")[0]
     filename += ".gif" if os.path.isfile(f"{Bot.DeweyConfig["image-save-path"]}/small/{filename}.gif") else ".png"

@@ -38,3 +38,31 @@ if Bot.DeweyConfig["reminders-enabled"]:
         except IndexError:
             return []
         
+    @tasks.loop(name="remindme-task", minutes=1)
+    async def remindme_task():
+        Logger.log(" [EVIL REMINDER TASK] im runnninggg")
+        reminders = getReminders()
+        reminder_qualifiers:list[Reminder] = []
+
+        timestamp = round(datetime.datetime.now().timestamp())
+        for user in reminders:
+            if timestamp > user.when:
+                reminder_qualifiers.append(user)
+
+        
+        for i in reminder_qualifiers:
+            try:
+                user = Bot.client.get_user(i.uid)
+                if user == None: user = await Bot.client.fetch_user(i.uid)
+                dm_channel = user.dm_channel
+                if not dm_channel: dm_channel = await user.create_dm()
+                
+                await dm_channel.send(content=f"""Hello I'm here to remind you of a thing you left on <t:{i.made}> for <t:{i.when}>{f" (https://discord.com/channels/{i.guild}/{i.channel}/{i.message})" if i.guild and i.channel and i.message else ""}
+    {f"```{i.note}```" if i.note else ""}""")
+            except discord.errors.Forbidden:
+                pass
+
+            #set the timeout to -2 so they don't qualify again (we don't dm them again)
+            removeReminder(uid=i.uid,when=i.when,made=i.made,messageid=i.message)
+    
+    Bot.client.on_ready_functions.append(remindme_task.start)

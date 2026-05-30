@@ -7,7 +7,7 @@ if __name__ == "__main__":
 import io
 from types import CoroutineType, FunctionType, MethodType
 import discord
-from discord.ext import commands as commands_
+from discord.ext import tasks, commands
 from discord.abc import PrivateChannel
 from yaml import load,Loader
 import traceback
@@ -34,27 +34,30 @@ import other.Permissions as Permissions
 import other.Channels as Channels
 import other.Settings as Settings
 
-class botClient(commands_.Bot):
+class botClient(discord.Client):
     def __init__(self):
-        super().__init__(intents = discord.Intents.all(),command_prefix="#")
+        super().__init__(intents = discord.Intents.all())
         self.main_guild: discord.Guild | None
         self.synced = False
         self.already_ran_once = False
-
+        self.on_ready_functions: list[MethodType | FunctionType] = []
+        self.on_message_functions: list[CoroutineType | FunctionType] = []
 
     async def on_ready(self):
         if not self.already_ran_once:
-            await client.load_extension("commands.Other")
-            await client.load_extension("commands.Gacha")
-            await client.load_extension("commands.Settings")
-            await client.load_extension("commands.Deweycoin")
-
+            for i in self.on_ready_functions:
+                if isinstance(i, (MethodType, FunctionType)):
+                    Logger.log(f" [on_ready] running on_ready_function of {i.__name__}", type=Logger.info)
+                    if iscoroutinefunction(i):
+                        await i.__call__()
+                    else:
+                        i.__call__()
 
         self.main_guild = self.get_guild(DeweyConfig["main-guild"])
 
         await self.wait_until_ready()
         if not self.synced:
-            await self.tree.sync()
+            await tree.sync()
             self.synced = True
            
         await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
@@ -62,6 +65,12 @@ class botClient(commands_.Bot):
 
         Logger.log(f" [on_ready] Dewey'd as {self.user}", type=Logger.info)
         self.already_ran_once = True
+
+
+    async def on_message(self, message: discord.Message):
+        for i in self.on_message_functions:
+            if iscoroutinefunction(i):
+                await i.__call__(message)
 
 
     async def on_raw_reaction_add(self, reactionpayload: discord.RawReactionActionEvent):
@@ -101,31 +110,31 @@ class botClient(commands_.Bot):
 
 
 client = botClient()
-#tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_commands.AppCommandContext(guild=True,dm_channel=True,private_channel=True),
-#                                        allowed_installs=discord.app_commands.AppInstallationType(guild=True,user=True))
+tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_commands.AppCommandContext(guild=True,dm_channel=True,private_channel=True),
+                                        allowed_installs=discord.app_commands.AppInstallationType(guild=True,user=True))
 
-#@tree.error
-#async def on_app_command_error(interaction: discord.Interaction, error):
-#    a = traceback.format_exc()
-#    Logger.log(a, type=Logger.error)
-#    channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_ERRORS)[0])
-#    buffer = io.BytesIO()
-#    buffer.write(a.encode())
-#    buffer.seek(0)
-#    assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
-#    await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt"))
-#    buffer.close()
-#    
-#    await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
+@tree.error
+async def on_app_command_error(interaction: discord.Interaction, error):
+    a = traceback.format_exc()
+    Logger.log(a, type=Logger.error)
+    channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_ERRORS)[0])
+    buffer = io.BytesIO()
+    buffer.write(a.encode())
+    buffer.seek(0)
+    assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
+    await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt"))
+    buffer.close()
+    
+    await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
 
-#if DeweyConfig["nick-enabled"]: import commands.Nick
-#if DeweyConfig["gacha-enabled"]: import commands.Gacha
-#if DeweyConfig["gif-enabled"]: import commands.Gif
-#if DeweyConfig["kfad-enabled"]: import commands.KFAD
-#if DeweyConfig["deweycoins-enabled"]: import commands.Bank
-#if DeweyConfig["obs-integration-enabled"]: import commands.OBS_Integration
-#import commands.Settings
-
+if DeweyConfig["nick-enabled"]: import commands.Nick
+if DeweyConfig["gacha-enabled"]: import commands.Gacha
+if DeweyConfig["gif-enabled"]: import commands.Gif
+if DeweyConfig["kfad-enabled"]: import commands.KFAD
+if DeweyConfig["deweycoins-enabled"]: import commands.Bank
+if DeweyConfig["obs-integration-enabled"]: import commands.OBS_Integration
+import commands.Settings
+import commands.Other
 
 # RUN
 
