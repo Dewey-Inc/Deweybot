@@ -117,9 +117,9 @@ tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_com
 async def on_app_command_error(interaction: discord.Interaction, error):
     async def inform(ctx:discord.Interaction,message:str,ephemeral:bool=True):
         if ctx.response.is_done():
-            await ctx.followup.send(content=message,ephemeral=True)
+            await ctx.followup.send(content=message,ephemeral=ephemeral)
         else:
-            await ctx.response.send_message(content=message)
+            await ctx.response.send_message(content=message,ephemeral=ephemeral)
         
     if isinstance(error, discord.app_commands.errors.CheckFailure):
         await inform(ctx=interaction, message="Yo. You not part of the \"Gang\"",ephemeral=True)
