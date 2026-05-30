@@ -117,7 +117,7 @@ tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_com
 async def on_app_command_error(interaction: discord.Interaction, error):
     async def inform(ctx:discord.Interaction,message:str,ephemeral:bool=True):
         if ctx.response.is_done():
-            await ctx.followup.send(content=message)
+            await ctx.followup.send(content=message,ephemeral=True)
         else:
             await ctx.response.send_message(content=message)
         
