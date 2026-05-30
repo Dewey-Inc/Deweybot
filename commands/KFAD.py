@@ -67,12 +67,12 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
     return (qualifiers, unique_authors)
 
 
-class GodCog(commands.cog.GroupCog, name="kfad"):
+class SettingsCog(commands.cog.GroupCog, name="obs"):
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_load(self):
-        print("kfad Cog Dewin' it")
+        print("Settings Cog Dewin' it")
 
             
 
@@ -155,67 +155,61 @@ class GodCog(commands.cog.GroupCog, name="kfad"):
             await ctx.followup.send(content=f"Qualifiers <t:{round(range_start.timestamp())}>-<t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
 
 
-    run = datetime.time(hour=15, minute=00, second=00, tzinfo=datetime.timezone(datetime.timedelta(hours=-4),"EDT"))
+run = datetime.time(hour=15, minute=00, second=00, tzinfo=datetime.timezone(datetime.timedelta(hours=-4),"EDT"))
 
-    if Bot.DeweyConfig["kfad-auto"]:
-        @tasks.loop(name="remindme-task", time=run)
-        async def kfad_task():
-            Logger.log(" [king for a day] im runnninggg", type=Logger.info)
-            
-            godchannel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_GOD_CHANNEL,filtertype=Channels.TYPE_CHANNEL)[0])
+if Bot.DeweyConfig["kfad-auto"]:
+    @tasks.loop(name="remindme-task", time=run)
+    async def kfad_task():
+        Logger.log(" [king for a day] im runnninggg", type=Logger.info)
+        
+        godchannel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_GOD_CHANNEL,filtertype=Channels.TYPE_CHANNEL)[0])
 
-            assert isinstance(godchannel,(discord.TextChannel,discord.Thread)), "god channel assertion"
-            assert godchannel
+        assert isinstance(godchannel,(discord.TextChannel,discord.Thread)), "god channel assertion"
+        assert godchannel
 
-            await godchannel.send("Hello! I'm *Dewey*, the one in the electoral college or something. I'm gonna roll a dice!")
+        await godchannel.send("Hello! I'm *Dewey*, the one in the electoral college or something. I'm gonna roll a dice!")
 
-            message_requirement = Bot.DeweyConfig["kfad-must-have"]
-            range_now = datetime.datetime.today()
-            range_start = range_now - datetime.timedelta(days=14)
-            range_end = range_now
+        message_requirement = Bot.DeweyConfig["kfad-must-have"]
+        range_now = datetime.datetime.today()
+        range_start = range_now - datetime.timedelta(days=14)
+        range_end = range_now
 
-            assert Bot.client.main_guild, "Bot.client.main_guild assertion"
-            qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=Bot.client.main_guild,getmembers=True, exclude_prev_gods=True)
+        assert Bot.client.main_guild, "Bot.client.main_guild assertion"
+        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=Bot.client.main_guild,getmembers=True, exclude_prev_gods=True)
 
-            if len(qualifiers) == 0:
-                await godchannel.send(content=f"(There aren't enough people who qualify)", silent=True)
-                return
-            pick = random.choice(qualifiers)
+        if len(qualifiers) == 0:
+            await godchannel.send(content=f"(There aren't enough people who qualify)", silent=True)
+            return
+        pick = random.choice(qualifiers)
 
-            role = Bot.client.main_guild.get_role(Bot.DeweyConfig["kfad-role"])
-            assert role, "could not find role"
-            for i in role.members:
-                await i.remove_roles(role, reason="god for a day roll")
-            
-            if type(pick) == discord.Member:
-                await pick.add_roles(role,reason="god got a day!!!!")
+        role = Bot.client.main_guild.get_role(Bot.DeweyConfig["kfad-role"])
+        assert role, "could not find role"
+        for i in role.members:
+            await i.remove_roles(role, reason="god for a day roll")
+        
+        if type(pick) == discord.Member:
+            await pick.add_roles(role,reason="god got a day!!!!")
 
-            await godchannel.send(content=f"{pick.mention} is the Mayor for the Day (until <t:\
+        await godchannel.send(content=f"{pick.mention} is the Mayor for the Day (until <t:\
 {round((range_now+datetime.timedelta(days=1)).timestamp())}:f>, <t:{round((range_now+datetime.timedelta(days=1)).timestamp())}:R>! to have a chance to be Mayor make sure you're active in the server :)\
 {' (please give role)' if type(pick) == discord.User else ''}")
 
 
 
 async def setup(bot:commands.Bot):
-    Logger.log("Hi I am the kfad extension", type=Logger.info)
-
-    cog = GodCog(bot=bot)
-    await bot.add_cog(cog)
+    print("Hi I am the kfad extension")
 
     if Bot.DeweyConfig["kfad-auto"]:
-        if not cog.kfad_task.is_running():
-            cog.kfad_task.start()
+        if not kfad_task.is_running():
+            kfad_task.start()
 
-async def teardown(bot:commands.Bot):
-    Logger.log("Hi I am exiting the kfad extension", type=Logger.info)
+    await bot.add_cog(SettingsCog(bot=bot))
 
-    thecog = bot.get_cog(GodCog.__name__)
-    if thecog:
-        if Bot.DeweyConfig["kfad-auto"]:
-            if thecog.kfad_task.is_running():
-                thecog.kfad_task.stop()
+async def teardown(bot):
+    print("Hi I am exiting the kfad extension")
 
-        await bot.remove_cog(GodCog.__name__)
-    
-    else:
-        Logger.log("* (I guess the kfad cog wasn't open)")
+    if Bot.DeweyConfig["kfad-auto"]:
+        if kfad_task.is_running():
+            kfad_task.stop()
+
+    await bot.remove_cog(SettingsCog.__name__)

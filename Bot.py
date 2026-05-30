@@ -45,9 +45,8 @@ class botClient(commands_.Bot):
     async def on_ready(self):
         if not self.already_ran_once:
             await client.load_extension("commands.Other")
-            await client.load_extension("commands.Settings")
             if DeweyConfig["gacha-enabled"]:      await client.load_extension("commands.Gacha")
-            if DeweyConfig["kfad-enabled"]:       await client.load_extension("commands.KFAD")
+            if DeweyConfig["kfad-enabled"]:       await client.load_extension("commands.Settings")
             if DeweyConfig["deweycoins-enabled"]: await client.load_extension("commands.Deweycoin")
 
 
