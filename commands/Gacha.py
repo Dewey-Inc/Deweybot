@@ -1,8 +1,10 @@
+
+from discord.app_commands import AppCommandError
+
 import Bot
 import gachalib.views.buy_packs
 import other.Permissions as Permissions
 import other.Channels as Channels
-import other.Logger as Logger
 
 import discord
 from discord.ext import commands, tasks
@@ -30,12 +32,20 @@ if Bot.DeweyConfig["deweycoins-enabled"]: import gachalib.views.cardsell
 gacha_settings = gachalib.gacha_settings
 
 
-class GachaCog(Bot.DeweyCog, name="gacha"):
+class GachaCog(commands.cog.GroupCog, name="gacha"):
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_load(self):
-        Logger.log("Settings Cog Dewin' it", type=Logger.info)
+        print("Settings Cog Dewin' it")
+
+            
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
 
 
     
@@ -551,7 +561,7 @@ async def reminder_task():
 
 
 async def setup(bot:commands.Bot):
-    Logger.log("Hi I am the gacha extension", type=Logger.info)
+    print("Hi I am the gacha extension")
 
     if Bot.DeweyConfig["gacha-reminder-task"]:
         if not reminder_task.is_running():
@@ -560,4 +570,4 @@ async def setup(bot:commands.Bot):
     await bot.add_cog(GachaCog(bot=bot))
 
 async def teardown(bot):
-    Logger.log("Hi I am exiting the gacha extension", type=Logger.info)
+    print("Hi I am exiting the gacha extension")

@@ -4,16 +4,22 @@ from discord.app_commands import AppCommandError
 from discord.ext import commands
 import other.Permissions as Permissions
 import other.Settings as Settings
-import other.Logger as Logger
 
 
-class SettingsCog(Bot.DeweyCog, name="obs"):
+class SettingsCog(commands.cog.GroupCog, name="obs"):
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_load(self):
-        Logger.log("Settings Cog Dewin' it", type=Logger.info)
+        print("Settings Cog Dewin' it")
 
+            
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
 
 
     
@@ -33,8 +39,8 @@ class SettingsCog(Bot.DeweyCog, name="obs"):
 
 
 async def setup(bot:commands.Bot):
-    Logger.log("Hi I am the settings extension", type=Logger.info)
+    print("Hi I am the settings extension")
     await bot.add_cog(SettingsCog(bot=bot))
 
 async def teardown(bot):
-    Logger.log("Hi I am exiting the settings extension", type=Logger.info)
+    print("Hi I am exiting the settings extension")

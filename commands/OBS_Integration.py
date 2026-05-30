@@ -14,12 +14,20 @@ aa = None
 running = False
 
 
-class OBSCog(Bot.DeweyCog, name="obs"):
+class OBSCog(commands.cog.GroupCog, name="obs"):
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_load(self):
-        Logger.log("OBS Cog OBSing it", type=Logger.info)
+        print("OBS Cog OBSing it")
+
+            
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
 
 
     
@@ -68,8 +76,8 @@ class OBSCog(Bot.DeweyCog, name="obs"):
 
 
 async def setup(bot:commands.Bot):
-    Logger.log("Hi I am the obs integration extension", type=Logger.info)
+    print("Hi I am the obs integration extension")
     await bot.add_cog(OBSCog(bot=bot))
 
 async def teardown(bot):
-    Logger.log("Hi I am exiting the obs integration extension", type=Logger.info)
+    print("Hi I am exiting the obs integration extension")

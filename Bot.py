@@ -50,6 +50,18 @@ class botClient(commands_.Bot):
             if DeweyConfig["kfad-enabled"]:       await client.load_extension("commands.KFAD")
             if DeweyConfig["deweycoins-enabled"]: await client.load_extension("commands.Deweycoin")
 
+        cog_list = []
+        for c in self.cogs:
+            if c is None:
+                continue
+            else:
+                cog_list.append(c)
+        cog_list = sorted(cog_list)
+        print(cog_list)
+        for cog in cog_list:
+            cog = self.get_cog(cog)
+            print(cog)
+
         self.main_guild = self.get_guild(DeweyConfig["main-guild"])
 
         await self.wait_until_ready()
@@ -98,18 +110,6 @@ class botClient(commands_.Bot):
         assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
         await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n",file=discord.File(fp=buffer,filename="error.txt"))
         buffer.close()
-
-    
-    async def on_app_command_completion(self, interaction: discord.Interaction, command: discord.app_commands.Command) -> None:
-        Logger.log(f"Dewey invoke {command.name} by {interaction.user}", type=Logger.info)
-
-
-class DeweyCog(commands_.GroupCog):
-    async def cog_app_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError) -> None:
-        if isinstance(error, discord.app_commands.errors.CheckFailure):
-            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
-        else:
-            raise error
 
 
 client = botClient()

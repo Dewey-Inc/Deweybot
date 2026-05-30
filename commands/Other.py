@@ -19,13 +19,13 @@ if Bot.DeweyConfig["gif-enabled"]:
 import random
 import re
 
-class OtherCog(Bot.DeweyCog, name="other"):
+class OtherCog(commands.cog.GroupCog, name="other"):
     def __init__(self, bot):
         self.bot = bot
         #self._last_member = None
 
     async def cog_load(self):
-        Logger.log("Other Cog Dewin' it", type=Logger.info)
+        print("Other Cog Dewin' it")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -67,7 +67,13 @@ class OtherCog(Bot.DeweyCog, name="other"):
                 await message.add_reaction("❌")
         return
 
+            
 
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
 
 
     if Bot.DeweyConfig["gif-enabled"]:
@@ -153,12 +159,18 @@ class OtherCog(Bot.DeweyCog, name="other"):
 
 
 
-class AdminOtherCog(Bot.DeweyCog, name="z-admin-other"):
+class AdminOtherCog(commands.cog.GroupCog, name="z-admin-other"):
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_load(self):
-        Logger.log("Admin Other Cog Dewin' it", type=Logger.info)
+        print("Admin Other Cog Dewin' it")
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
     
 
     @discord.app_commands.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
@@ -349,7 +361,7 @@ if Bot.DeweyConfig["reminders-enabled"]:
 
 
 async def setup(bot:commands.Bot):
-    Logger.log("Hi I am the other extension", type=Logger.info)
+    print("Hi I am the other extension")
 
     if Bot.DeweyConfig["reminders-enabled"]:
         if not remindme_task.is_running():
@@ -359,4 +371,4 @@ async def setup(bot:commands.Bot):
     await bot.add_cog(AdminOtherCog(bot=bot))
 
 async def teardown(bot):
-    Logger.log("Hi I am exiting the other extension", type=Logger.info)
+    print("Hi I am exiting the other extension")

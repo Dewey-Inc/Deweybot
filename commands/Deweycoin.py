@@ -14,14 +14,21 @@ from moneylib.views import *
 
 
 
-class DeweycoinCog(Bot.DeweyCog, name="deweycoin"):
+class DeweycoinCog(commands.cog.GroupCog, name="deweycoin"):
     def __init__(self, bot):
         self.bot = bot
         
 
     async def cog_load(self):
-        Logger.log("Deweycoin Cog Dewin' it", type=Logger.info)
+        print("Deweycoin Cog Dewin' it")
 
+            
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
+        if isinstance(error, discord.app_commands.errors.CheckFailure):
+            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
+        else:
+            raise error
 
     
     #@discord.app_commands.command(name="doors", description="cause uptown funk gonna give it to ya")
@@ -215,8 +222,8 @@ class DeweycoinCog(Bot.DeweyCog, name="deweycoin"):
 
 
 async def setup(bot:commands.Bot):
-    Logger.log("Hi I am the deweycoin extension", type=Logger.info)
+    print("Hi I am the deweycoin extension")
     await bot.add_cog(DeweycoinCog(bot=bot))
 
 async def teardown(bot):
-    Logger.log("Hi I am exiting the deweycoin extension", type=Logger.info)
+    print("Hi I am exiting the deweycoin extension")
