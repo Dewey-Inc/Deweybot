@@ -67,20 +67,13 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
     return (qualifiers, unique_authors)
 
 
-class GodCog(commands.cog.GroupCog, name="kfad"):
+class GodCog(Bot.DeweyCog, name="kfad"):
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_load(self):
-        print("kfad Cog Dewin' it")
+        Logger.log("kfad Cog Dewin' it", type=Logger.info)
 
-            
-
-    async def cog_app_command_error(self, interaction: discord.Interaction, error: AppCommandError) -> None:
-        if isinstance(error, discord.app_commands.errors.CheckFailure):
-            await interaction.response.send_message(content="Yo. You not part of the \"Gang\"")
-        else:
-            raise error
 
 
     
@@ -201,7 +194,6 @@ async def setup(bot:commands.Bot):
 
     cog = GodCog(bot=bot)
     await bot.add_cog(cog)
-    thecog = bot.get_cog("kfad")
 
     if Bot.DeweyConfig["kfad-auto"]:
         if not cog.kfad_task.is_running():
