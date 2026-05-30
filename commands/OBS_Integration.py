@@ -81,3 +81,4 @@ async def setup(bot:commands.Bot):
 
 async def teardown(bot):
     print("Hi I am exiting the obs integration extension")
+    await bot.remove_cog(OBSCog.__name__)

@@ -227,3 +227,4 @@ async def setup(bot:commands.Bot):
 
 async def teardown(bot):
     print("Hi I am exiting the deweycoin extension")
+    await bot.remove_cog(DeweycoinCog.__name__)

@@ -571,3 +571,9 @@ async def setup(bot:commands.Bot):
 
 async def teardown(bot):
     print("Hi I am exiting the gacha extension")
+
+    if Bot.DeweyConfig["gacha-reminder-task"]:
+        if reminder_task.is_running():
+            reminder_task.stop()
+
+    await bot.remove_cog(GachaCog.__name__)

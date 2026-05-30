@@ -50,17 +50,6 @@ class botClient(commands_.Bot):
             if DeweyConfig["kfad-enabled"]:       await client.load_extension("commands.KFAD")
             if DeweyConfig["deweycoins-enabled"]: await client.load_extension("commands.Deweycoin")
 
-        cog_list = []
-        for c in self.cogs:
-            if c is None:
-                continue
-            else:
-                cog_list.append(c)
-        cog_list = sorted(cog_list)
-        print(cog_list)
-        for cog in cog_list:
-            cog = self.get_cog(cog)
-            print(cog)
 
         self.main_guild = self.get_guild(DeweyConfig["main-guild"])
 

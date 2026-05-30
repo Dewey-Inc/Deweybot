@@ -372,3 +372,10 @@ async def setup(bot:commands.Bot):
 
 async def teardown(bot):
     print("Hi I am exiting the other extension")
+
+    if Bot.DeweyConfig["reminders-enabled"]:
+        if remindme_task.is_running():
+            remindme_task.stop()
+
+    await bot.remove_cog(OtherCog.__name__)
+    await bot.add_cog(AdminOtherCog.__name__)
