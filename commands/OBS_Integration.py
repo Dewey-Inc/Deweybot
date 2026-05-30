@@ -15,46 +15,46 @@ running = False
 obs_group = discord.app_commands.Group(name="obs", description="obs grop")
 
 @obs_group.command(name="z-launch-server", description="cause uptown funk gonna give it to ya")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def launch(ctx : discord.Interaction):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        global aa
-        aa = subprocess.Popen([
-            f"./server.py",
-            "-H", Bot.DeweyConfig["obs-integration-host"],
-            "-P", str(Bot.DeweyConfig["obs-integration-port"]),
-            "-s", Bot.DeweyConfig["obs-integration-secret"]], cwd="./other/dewey_obs")
-        Logger.log(" [OBS_Integration] launched Dewey OBS PID ", aa.pid, type=Logger.info)
-        await ctx.response.send_message(f"i started it {aa.pid}")
-        running = True
+    global aa
+    aa = subprocess.Popen([
+        f"./server.py",
+        "-H", Bot.DeweyConfig["obs-integration-host"],
+        "-P", str(Bot.DeweyConfig["obs-integration-port"]),
+        "-s", Bot.DeweyConfig["obs-integration-secret"]], cwd="./other/dewey_obs")
+    Logger.log(" [OBS_Integration] launched Dewey OBS PID ", aa.pid, type=Logger.info)
+    await ctx.response.send_message(f"i started it {aa.pid}")
+    running = True
 
 
 @obs_group.command(name="z-kill-server", description="cause uptown funk gonna give it to ya")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def kill(ctx : discord.Interaction):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        if aa:
-            aa.kill()
-            running = False
-            await ctx.response.send_message(content=f"i KILL ED it {aa.pid}")
+    if aa:
+        aa.kill()
+        running = False
+        await ctx.response.send_message(content=f"i KILL ED it {aa.pid}")
 
 @obs_group.command(name="z-send-image", description="cause uptown funk gonna give it to ya")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def send(ctx : discord.Interaction, image : discord.Attachment):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        imaaage = BytesIO()
-        await image.save(fp=imaaage)
+    imaaage = BytesIO()
+    await image.save(fp=imaaage)
 
-        resp = requests.post(Bot.DeweyConfig["obs-integration-post-host"] + "/image",
-                             headers={"Authorization": f"Bearer {Bot.DeweyConfig["obs-integration-secret"]}"},
-                             files={"image": imaaage})
-        if resp.status_code == 201:
-            await ctx.response.send_message('Successfully sent image')
-        elif resp.status_code == 401:
-            await ctx.response.send_message('Error (incorrect secret)!!!!! ' + resp.content.decode())
-        elif resp.status_code == 400:
-            await ctx.response.send_message('Error (missing image)!!!!! ' + resp.content.decode())
-        else:
-            await ctx.response.send_message('Error (unknown)!!!!! ' + resp.content.decode())
+    resp = requests.post(Bot.DeweyConfig["obs-integration-post-host"] + "/image",
+                         headers={"Authorization": f"Bearer {Bot.DeweyConfig["obs-integration-secret"]}"},
+                         files={"image": imaaage})
+    if resp.status_code == 201:
+        await ctx.response.send_message('Successfully sent image')
+    elif resp.status_code == 401:
+        await ctx.response.send_message('Error (incorrect secret)!!!!! ' + resp.content.decode())
+    elif resp.status_code == 400:
+        await ctx.response.send_message('Error (missing image)!!!!! ' + resp.content.decode())
+    else:
+        await ctx.response.send_message('Error (unknown)!!!!! ' + resp.content.decode())
         
-        imaaage.close()
+    imaaage.close()
 
 
 Bot.tree.add_command(obs_group)

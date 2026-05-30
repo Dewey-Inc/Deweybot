@@ -62,7 +62,7 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
     if not Permissions.banned(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
-            if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id)[0] or Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN) or ctx.user.id == card.maker_id:
+            if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id)[0] or Permissions.gacha_approve_check(ctx=ctx) or ctx.user.id == card.maker_id:
                 image=gachalib.get_small_thumbnail(card)
                 await ctx.response.send_message(
                     view=gachalib.views.card.GachaView(card, image), file=image, ephemeral=not show,
@@ -189,7 +189,7 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
 
         success, card = gachalib.cards.get_card_by_id(id)
 
-        if success and (card.maker_id == ctx.user.id or Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN)):
+        if success and (card.maker_id == ctx.user.id or Permissions.gacha_approve_check(ctx=ctx)):
             changed_anything = False
             if name != "" and name != card.name:
                 gachalib.cards.update_card(id,"name",name)
@@ -463,59 +463,50 @@ async def gacha_settings_roll_reminders(ctx : discord.Interaction, set:bool):
 #######################################
 
 @gacha_group.command(name="z-admin-deletecard", description="!MOD ONLY! (Ask us!) Delete a card")
+@discord.app_commands.check(predicate=Permissions.gacha_approve_check)
 async def z_gacha_admin_deletecard(ctx : discord.Interaction, id:int):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        gachalib.cards.delete_card(id)
-        await ctx.response.send_message("Deleted card.", ephemeral=True)
-    else:
-        await ctx.response.send_message("Yo. You not part of the \"Gang\" (ask for your card to be deleted)", ephemeral=True)
+    gachalib.cards.delete_card(id)
+    await ctx.response.send_message("Deleted card.", ephemeral=True)
 
 
 @gacha_group.command(name="z-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
+@discord.app_commands.check(predicate=Permissions.gacha_approve_check)
 async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved: bool):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_GACHA_APPROVE):
-        success,card = gachalib.cards.get_card_by_id(id)
-        if success:
-            _, status = await gachalib.cards.approve_card(approved, card)
-            await ctx.response.send_message(status, ephemeral=True)
-        else:
-            await ctx.response.send_message("Does not exist", ephemeral=True)
+    success,card = gachalib.cards.get_card_by_id(id)
+    if success:
+        _, status = await gachalib.cards.approve_card(approved, card)
+        await ctx.response.send_message(status, ephemeral=True)
     else:
-        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
+        await ctx.response.send_message("Does not exist", ephemeral=True)
 
 
 @gacha_group.command(name="z-admin-givecard", description="!MOD ONLY! Just give someone a card")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord.Member|discord.User):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        cardid = gachalib.cards_inventory.give_user_card(user_id=user.id, card_id=id)
-        await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
-    else:
-        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
+    cardid = gachalib.cards_inventory.give_user_card(user_id=user.id, card_id=id)
+    await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
 
 
 @gacha_group.command(name="z-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
+@discord.app_commands.check(predicate=Permissions.gacha_approve_check)
 async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_GACHA_APPROVE):
-        success,card = gachalib.cards.get_card_by_id(id)
-        if success:
-            gachalib.cards.update_card(id, "rarity", rarity)
-            await ctx.response.send_message(f"Card is now {rarity}", ephemeral=True)
-        else:
-            await ctx.response.send_message("Does not exist", ephemeral=True)
+    success,card = gachalib.cards.get_card_by_id(id)
+    if success:
+        gachalib.cards.update_card(id, "rarity", rarity)
+        await ctx.response.send_message(f"Card is now {rarity}", ephemeral=True)
     else:
-        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
+        await ctx.response.send_message("Does not exist", ephemeral=True)
+
 
 @gacha_group.command(name="z-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
+@discord.app_commands.check(predicate=Permissions.gacha_approve_check)
 async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_GACHA_APPROVE):
-            layout = gachalib.views.unaccepted.UnacceptedView()
-            await ctx.response.send_message(
-                view=layout,
-                ephemeral=True if ctx.guild else False,
-                allowed_mentions=discord.AllowedMentions(users=False)
-            )
-    else:
-        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
+        layout = gachalib.views.unaccepted.UnacceptedView()
+        await ctx.response.send_message(
+            view=layout,
+            ephemeral=True if ctx.guild else False,
+            allowed_mentions=discord.AllowedMentions(users=False)
+        )
 
 gacha_group.add_command(gacha_settings_group)
 Bot.tree.add_command(gacha_group)

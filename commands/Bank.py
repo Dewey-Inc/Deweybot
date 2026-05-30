@@ -179,31 +179,31 @@ async def money_give_coin(ctx : discord.Interaction, user: discord.Member | disc
         await ctx.response.send_message(content=f"You don't have enough!",ephemeral=False)
 
 @coin_group.command(name="z-movecoins", description=" ! ADMIN ONLY ! force move coins from user -> user (ex. take from dewey) (allows debt)")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def gacha_z_move_coin(ctx : discord.Interaction, from_user:discord.Member | discord.User, to_user: discord.Member | discord.User | None, coins:int):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        if to_user == None: to_user = ctx.user
-        moneylib.giveCoins(from_user.id, -coins)
-        moneylib.giveCoins(to_user.id, coins)
-        await ctx.response.send_message("ok",ephemeral=True)
+    if to_user == None: to_user = ctx.user
+    moneylib.giveCoins(from_user.id, -coins)
+    moneylib.giveCoins(to_user.id, coins)
+    await ctx.response.send_message("ok",ephemeral=True)
 
-@coin_group.command(name="z-givecoins", description=" ! ADMIN ONLY ! materialize coins (i advice against doing this)")
+@coin_group.command(name="z-givecoins", description=" ! ADMIN ONLY ! materialize coins (i advise against doing this)")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def money_z_give_coin(ctx : discord.Interaction, user: discord.Member | discord.User | None, coins:int):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        if user == None: user = ctx.user
-        moneylib.giveCoins(user.id, coins)
-        await ctx.response.send_message("ok",ephemeral=True)
+    if user == None: user = ctx.user
+    moneylib.giveCoins(user.id, coins)
+    await ctx.response.send_message("ok",ephemeral=True)
 
 
 @coin_group.command(name="z-audit", description=" ! ADMIN ONLY ! how much money exists in the wild")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def money_z_audit(ctx : discord.Interaction, show:bool=True):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        money = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="deweycoins",values=["balance"]))
-        total_cash = 0
+    money = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="deweycoins",values=["balance"]))
+    total_cash = 0
 
-        for i in money:
-            total_cash += i[0]
+    for i in money:
+        total_cash += i[0]
         
-        await ctx.response.send_message(content=f"There are D¢{total_cash} in existence", ephemeral=not show)
+    await ctx.response.send_message(content=f"There are D¢{total_cash} in existence", ephemeral=not show)
 
 
 coin_group.add_command(gambling_group)

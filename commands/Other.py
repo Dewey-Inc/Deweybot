@@ -83,55 +83,55 @@ if Bot.DeweyConfig["suggestions-enabled"]:
 
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.check(predicate=Permissions.repeat_check)
 async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread | None = None, reply: str = "0"):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN) or Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_REPEAT):
-        log_channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_REPEAT_LOG)[0])
+    log_channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_REPEAT_LOG)[0])
 
-        assert isinstance(log_channel,(discord.TextChannel,discord.Thread,discord.DMChannel)), "log channel assertion"
+    assert isinstance(log_channel,(discord.TextChannel,discord.Thread,discord.DMChannel)), "log channel assertion"
 
-        _channel = channel
+    _channel = channel
 
-        if _channel == None:
-            _channel = ctx.channel
+    if _channel == None:
+        _channel = ctx.channel
 
-        assert _channel, "channel assertion"
-        assert not isinstance(_channel, (discord.CategoryChannel,discord.ForumChannel)), "channel is category or forum assertion"
+    assert _channel, "channel assertion"
+    assert not isinstance(_channel, (discord.CategoryChannel,discord.ForumChannel)), "channel is category or forum assertion"
 
-        if reply == "0":
-            await _channel.send(content=what_said)
-        else:
-            reply_int = int(reply)
-            reply_message = await _channel.fetch_message(reply_int)
-            await reply_message.reply(content=what_said)
+    if reply == "0":
+        await _channel.send(content=what_said)
+    else:
+        reply_int = int(reply)
+        reply_message = await _channel.fetch_message(reply_int)
+        await reply_message.reply(content=what_said)
 
-        await ctx.response.send_message(
-            f"okay!", ephemeral=True
-        )
-        await log_channel.send(f"{ctx.user.name} said `{what_said}`")
+    await ctx.response.send_message(
+        f"okay!", ephemeral=True
+    )
+    await log_channel.send(f"{ctx.user.name} said `{what_said}`")
 
 if Bot.DeweyConfig["gacha-enabled"]:
     import gachalib
     if Bot.DeweyConfig["gacha-reminder-task"]:
         @admin_group.command(name="start-reminder-task", description="!-ADMIN ONLY-! restart reminder task")
         @discord.app_commands.allowed_installs(guilds=True, users=False)
+        @discord.app_commands.check(predicate=Permissions.admin_check)
         async def reminder_task(ctx : discord.Interaction):
-            if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-                if not gachalib.reminder_task.is_running():
-                    gachalib.reminder_task.start()
-                    await ctx.response.send_message(
-                        f"okay!", ephemeral=True
-                    )
-                else:
-                    await ctx.response.send_message(
-                        f"its running already", ephemeral=True
-                    )
+            if not gachalib.reminder_task.is_running():
+                gachalib.reminder_task.start()
+                await ctx.response.send_message(
+                    f"okay!", ephemeral=True
+                )
+            else:
+                await ctx.response.send_message(
+                    f"its running already", ephemeral=True
+                )
         @admin_group.command(name="check-reminder-task", description="!-ADMIN ONLY-! check if reminder task running")
         @discord.app_commands.allowed_installs(guilds=True, users=False)
+        @discord.app_commands.check(predicate=Permissions.admin_check)
         async def check_reminder_task(ctx : discord.Interaction):
-            if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-                await ctx.response.send_message(
-                    gachalib.reminder_task.is_running(), ephemeral=True
-                )
+            await ctx.response.send_message(
+                gachalib.reminder_task.is_running(), ephemeral=True
+            )
 
 
 @Bot.tree.command(name="version", description="What version am I?")
@@ -152,90 +152,90 @@ async def sexer(ctx : discord.Interaction):
 
 @admin_group.command(name="assign_permission", description="!-ADMIN ONLY-! assign someone a permission")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def assign_permission(ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
-        a = Permissions.add_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
-        await ctx.response.send_message(content="Success" if a else "Malfunction")
+    a = Permissions.add_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
+    await ctx.response.send_message(content="Success" if a else "Malfunction")
 
 @admin_group.command(name="remove_permission", description="!-ADMIN ONLY-! remove permission from someone")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def remove_permission(ctx : discord.Interaction, permission:Permissions.permission_literal, what:Permissions.type_literal,object:discord.Role|discord.User):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
-        a = Permissions.remove_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
-        await ctx.response.send_message(content="Success" if a else "Malfunction")
+    a = Permissions.remove_permission(id=object.id,type=typing.get_args(Permissions.type_literal).index(what)+1,permission=typing.get_args(Permissions.permission_literal).index(permission)+1,temp=False)
+    await ctx.response.send_message(content="Success" if a else "Malfunction")
 
 @admin_group.command(name="list_permission", description="!-ADMIN ONLY-! list everyone with a permission")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def list_permission(ctx : discord.Interaction, permission:Permissions.permission_literal):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
-        permission_id = typing.get_args(Permissions.permission_literal).index(permission)+1
-        users_embed = discord.Embed(title="Users", description="ok")
-        roles_embed = discord.Embed(title="Roles", description="ok")
+    permission_id = typing.get_args(Permissions.permission_literal).index(permission)+1
+    users_embed = discord.Embed(title="Users", description="ok")
+    roles_embed = discord.Embed(title="Roles", description="ok")
 
-        for i in Permissions.permission_tree[permission_id]["users"]:
-            users_embed.add_field(name=f"User", value=f"<@{i}>")
-        for i in Permissions.permission_tree[permission_id]["roles"]:
-            roles_embed.add_field(name=f"Role", value=f"<@&{i}>")
+    for i in Permissions.permission_tree[permission_id]["users"]:
+        users_embed.add_field(name=f"User", value=f"<@{i}>")
+    for i in Permissions.permission_tree[permission_id]["roles"]:
+        roles_embed.add_field(name=f"Role", value=f"<@&{i}>")
 
-        await ctx.response.send_message(content=f"Permission for {permission}", embeds=[users_embed,roles_embed])
+    await ctx.response.send_message(content=f"Permission for {permission}", embeds=[users_embed,roles_embed])
 
 
 
 
 @admin_group.command(name="add_channel", description="!-ADMIN ONLY-! adds a channel to the channel lists")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def add_channel(ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
-        if channel and user: 
-            await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
-            return 
-        if not channel and not user: 
-            await ctx.response.send_message(content="I'm going to kill you.") # Jokes
-            return 
+    if channel and user: 
+        await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
+        return 
+    if not channel and not user: 
+        await ctx.response.send_message(content="I'm going to kill you.") # Jokes
+        return 
 
-        a = Channels.add_channel(
-            id=channel.id if channel else user.id if user else -1,
-            channeltype=Channels.TYPE_DM if user else Channels.TYPE_CHANNEL if channel else -1,
-            type=typing.get_args(Channels.channel_literal).index(type)+1,
-            temp=False
-        )
+    a = Channels.add_channel(
+        id=channel.id if channel else user.id if user else -1,
+        channeltype=Channels.TYPE_DM if user else Channels.TYPE_CHANNEL if channel else -1,
+        type=typing.get_args(Channels.channel_literal).index(type)+1,
+        temp=False
+    )
 
-        await ctx.response.send_message(content="Success" if a else "Malfunction")
+    await ctx.response.send_message(content="Success" if a else "Malfunction")
 
 @admin_group.command(name="remove_channel", description="!-ADMIN ONLY-! removes a channel from the channel lists")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def remove_channel(ctx : discord.Interaction, type: Channels.channel_literal, user: discord.User | None = None, channel:discord.TextChannel | None = None):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
-        if channel and user: 
-            await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
-            return 
-        if not channel and not user: 
-            await ctx.response.send_message(content="I'm going to kill you.") # Jokes
-            return 
+    if channel and user: 
+        await ctx.response.send_message(content="Don't do them both. Bad things will happen. To you. And only you.")
+        return 
+    if not channel and not user: 
+        await ctx.response.send_message(content="I'm going to kill you.") # Jokes
+        return 
 
-        a = Channels.remove_channel(
-            id=channel.id if channel else user.id if user else -1,
-            channeltype=Channels.TYPE_DM if user else Channels.TYPE_CHANNEL if channel else -1,
-            type=typing.get_args(Channels.channel_literal).index(type)+1,
-            temp=False
-        )
+    a = Channels.remove_channel(
+        id=channel.id if channel else user.id if user else -1,
+        channeltype=Channels.TYPE_DM if user else Channels.TYPE_CHANNEL if channel else -1,
+        type=typing.get_args(Channels.channel_literal).index(type)+1,
+        temp=False
+    )
 
-        await ctx.response.send_message(content="Success" if a else "Malfunction")
+    await ctx.response.send_message(content="Success" if a else "Malfunction")
 
 @admin_group.command(name="list_channel", description="!-ADMIN ONLY-! list channels with a type")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def list_channel(ctx : discord.Interaction, type: Channels.channel_literal):
-    if Permissions.check_permission(ctx=ctx,permission=Permissions.PERMISSION_ADMIN):
-        channel_type_id = typing.get_args(Channels.channel_literal).index(type)+1
-        dm_embed = discord.Embed(title="Dms", description="ok")
-        channels_embed = discord.Embed(title="Channels", description="like actually whatever")
+    channel_type_id = typing.get_args(Channels.channel_literal).index(type)+1
+    dm_embed = discord.Embed(title="Dms", description="ok")
+    channels_embed = discord.Embed(title="Channels", description="like actually whatever")
 
-        for i in Channels.channel_tree[channel_type_id]["dm"]:
-            dm_embed.add_field(name=f"Dms", value=f"<@{i}>")
-        for i in Channels.channel_tree[channel_type_id]["channel"]:
-            channels_embed.add_field(name=f"Role", value=f"<#{i}>")
+    for i in Channels.channel_tree[channel_type_id]["dm"]:
+        dm_embed.add_field(name=f"Dms", value=f"<@{i}>")
+    for i in Channels.channel_tree[channel_type_id]["channel"]:
+        channels_embed.add_field(name=f"Role", value=f"<#{i}>")
 
-        await ctx.response.send_message(content=f"Channels for {type}", embeds=[dm_embed,channels_embed])
+    await ctx.response.send_message(content=f"Channels for {type}", embeds=[dm_embed,channels_embed])
 
 
 Bot.tree.add_command(admin_group)

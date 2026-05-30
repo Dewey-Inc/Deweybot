@@ -75,68 +75,69 @@ async def gfad_help(ctx : discord.Interaction):
 
 
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 7, exclude_previous_gods:bool=False):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
-        range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(days=days)
-        range_end = range_now
+    if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
+    range_now = datetime.datetime.today()
+    range_start = range_now - datetime.timedelta(days=days)
+    range_end = range_now
         
-        await ctx.response.defer(ephemeral=False,thinking=True)
+    await ctx.response.defer(ephemeral=False,thinking=True)
 
-        assert ctx.guild, "ctx.guild assertion"
-        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True, exclude_prev_gods=exclude_previous_gods)
+    assert ctx.guild, "ctx.guild assertion"
+    qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True, exclude_prev_gods=exclude_previous_gods)
 
-        if len(qualifiers) == 0:
-            await ctx.followup.send(content=f"(There aren't enough people who qualify)", silent=True, ephemeral=False)
-            return
-        pick = random.choice(qualifiers)
+    if len(qualifiers) == 0:
+        await ctx.followup.send(content=f"(There aren't enough people who qualify)", silent=True, ephemeral=False)
+        return
+    pick = random.choice(qualifiers)
 
-        role = ctx.guild.get_role(Bot.DeweyConfig["kfad-role"])
-        assert role, "could not find role"
-        for i in role.members:
-            await i.remove_roles(role, reason="god for a day roll")
+    role = ctx.guild.get_role(Bot.DeweyConfig["kfad-role"])
+    assert role, "could not find role"
+    for i in role.members:
+        await i.remove_roles(role, reason="god for a day roll")
         
-        if type(pick) == discord.Member:
-            await pick.add_roles(role,reason="god got a day!!!!")
+    if type(pick) == discord.Member:
+        await pick.add_roles(role,reason="god got a day!!!!")
 
-        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day (until <t:\
+    await ctx.followup.send(content=f"{pick.display_name} is the God for the Day (until <t:\
 {round((range_now+datetime.timedelta(days=1)).timestamp())}:f>, <t:{round((range_now+datetime.timedelta(days=1)).timestamp())}:R>! to have a chance to be god make sure you're active in the server :)\
-{' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False)
+{' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False) #TODO: fix whatever the fuck is up with this , probably merge automatic mayor with the command
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
+@discord.app_commands.check(predicate=Permissions.admin_check)
 async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1, exclude_prev_gods:bool=True, days:int = 7):
-    if Permissions.check_permission(ctx=ctx, permission=Permissions.PERMISSION_ADMIN):
-        if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
-        range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(days=days)
-        range_end = range_now
+    if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
+    range_now = datetime.datetime.today()
+    range_start = range_now - datetime.timedelta(days=days)
+    range_end = range_now
         
-        await ctx.response.defer(ephemeral=False, thinking=True)
+    await ctx.response.defer(ephemeral=False, thinking=True)
 
-        assert ctx.guild, "ctx.guild assertion"
-        _,qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False,exclude_prev_gods=exclude_prev_gods)
-        qualifier_count = {}
+    assert ctx.guild, "ctx.guild assertion"
+    _,qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False,exclude_prev_gods=exclude_prev_gods)
+    qualifier_count = {}
 
-        if len(qualifiers) == 0:
-            await ctx.followup.send(content=f"(Nobody qualifies)", ephemeral=False)
-            return
+    if len(qualifiers) == 0:
+        await ctx.followup.send(content=f"(Nobody qualifies)", ephemeral=False)
+        return
         
-        for uid,messagecount in qualifiers.items():
-            if messagecount >= message_requirement:
-                qualifier_count[str(uid)] = messagecount
+    for uid,messagecount in qualifiers.items():
+        if messagecount >= message_requirement:
+            qualifier_count[str(uid)] = messagecount
 
-        string = ""
-        for uid,count in qualifier_count.items():
-            loser = ctx.guild.get_member(uid)
-            if loser == None: loser = await ctx.guild.fetch_member(uid)
+    string = ""
+    for uid,count in qualifier_count.items():
+        loser = ctx.guild.get_member(uid)
+        if loser == None: loser = await ctx.guild.fetch_member(uid)
 
-            string += loser.name + ": " + str(count) + "\n"
-        buffer = io.BytesIO()
-        buffer.write(string.encode())
-        buffer.seek(0)
-        await ctx.followup.send(content=f"Qualifiers <t:{round(range_start.timestamp())}>-<t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
+        string += loser.name + ": " + str(count) + "\n"
+        
+    buffer = io.BytesIO()
+    buffer.write(string.encode())
+    buffer.seek(0)
+    await ctx.followup.send(content=f"Qualifiers <t:{round(range_start.timestamp())}>-<t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
 
 if Bot.DeweyConfig["kfad-auto"]:
     run = datetime.time(hour=15, minute=00, second=00, tzinfo=datetime.timezone(datetime.timedelta(hours=-4),"EDT"))
