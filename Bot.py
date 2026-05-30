@@ -45,9 +45,9 @@ class botClient(commands_.Bot):
     async def on_ready(self):
         if not self.already_ran_once:
             await client.load_extension("commands.Other")
-            if DeweyConfig["gacha-enabled"]:      await client.load_extension("commands.Gacha")
-            if DeweyConfig["kfad-enabled"]:       await client.load_extension("commands.Settings")
-            if DeweyConfig["deweycoins-enabled"]: await client.load_extension("commands.Deweycoin")
+            await client.load_extension("commands.Gacha")
+            await client.load_extension("commands.Settings")
+            await client.load_extension("commands.Deweycoin")
 
 
         self.main_guild = self.get_guild(DeweyConfig["main-guild"])
@@ -101,6 +101,30 @@ class botClient(commands_.Bot):
 
 
 client = botClient()
+#tree = discord.app_commands.CommandTree(client, allowed_contexts=discord.app_commands.AppCommandContext(guild=True,dm_channel=True,private_channel=True),
+#                                        allowed_installs=discord.app_commands.AppInstallationType(guild=True,user=True))
+
+#@tree.error
+#async def on_app_command_error(interaction: discord.Interaction, error):
+#    a = traceback.format_exc()
+#    Logger.log(a, type=Logger.error)
+#    channel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_ERRORS)[0])
+#    buffer = io.BytesIO()
+#    buffer.write(a.encode())
+#    buffer.seek(0)
+#    assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
+#    await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt"))
+#    buffer.close()
+#    
+#    await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
+
+#if DeweyConfig["nick-enabled"]: import commands.Nick
+#if DeweyConfig["gacha-enabled"]: import commands.Gacha
+#if DeweyConfig["gif-enabled"]: import commands.Gif
+#if DeweyConfig["kfad-enabled"]: import commands.KFAD
+#if DeweyConfig["deweycoins-enabled"]: import commands.Bank
+#if DeweyConfig["obs-integration-enabled"]: import commands.OBS_Integration
+#import commands.Settings
 
 
 # RUN
