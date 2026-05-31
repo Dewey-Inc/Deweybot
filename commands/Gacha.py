@@ -183,9 +183,9 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
             inv_small[0].save(fp=img_smallevil, format="png")
 
 
-        save_file(path=f"{path}/small",  filename=f"{filename}.{extension}",fp=img_small)
-        save_file(path=f"{path}/E",      filename=f"{filename}.{extension}",fp=img_evil)
-        save_file(path=f"{path}/small/E",filename=f"{filename}.{extension}",fp=img_smallevil)
+        save_file(path=f"{path}/small", filename=f"{filename}.{extension}",fp=img_small)
+        save_file(path=f"{path}",       filename=f"E{filename}.{extension}",fp=img_evil)
+        save_file(path=f"{path}/small", filename=f"E{filename}.{extension}",fp=img_smallevil)
 
         filename += f".{ext}"
 
