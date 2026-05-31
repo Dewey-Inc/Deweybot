@@ -3,8 +3,10 @@ from PIL.ImageFont import Layout
 
 import Bot
 import gachalib.views.buy_packs
+from other import dewey_webdav
 import other.Permissions as Permissions
 import other.Channels as Channels
+if Bot.DeweyConfig["file-saving"] == "WebDAV": import other.dewey_webdav
 
 import discord
 from discord.abc import PrivateChannel
@@ -114,39 +116,77 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
         extension = extension[len(extension)-1]
 
         filename = f'CARD-{next_id}'
-        with open(f"{Bot.DeweyConfig["image-save-path"]}/{filename}.{extension}", "wb") as f:
-            await image.save(f)
 
-        small = []
-        inv_frames = []
-        inv_small = []
-        durations = []
+        # uploading images can take a bit so we should do somethimg so it doesnt time out
+        await ctx.response.defer()
+        
+        imagefp = io.BytesIO()
+        await image.save(fp=imagefp)
+
+        def save_file(path:str, filename:str, fp:io.BytesIO):
+            if Bot.DeweyConfig["file-saving"] == "WebDAV":
+                fp.seek(0) # SEEKING IS IMPORTANT MAKE SURE TO SEEK BEFORE READING. IT.
+                dewey_webdav.WebDAVClient(
+                    url=Bot.DeweyConfig["webdav-url"],
+                    username=Bot.DeweyConfig["webdav-username"],
+                    password=Bot.DeweyConfig["webdav-password"]
+                ).upload_file(
+                    #path=f"{Bot.DeweyConfig["image-save-path"]}/{filename}.{extension}",
+                    path=f"{path}/{filename}",
+                    fp=fp
+                )
+            elif Bot.DeweyConfig["file-saving"] == "Local":
+                fp.seek(0)
+                with open(file=f"{path}/{filename}", mode="wb") as f:
+                    f.write(fp.read())
+            else:
+                raise Exception("file-saving is not WebDAV or Local")
+
+        save_file(path=f"{Bot.DeweyConfig["image-save-path"]}",filename=f"{filename}.{extension}",fp=imagefp)
+
+        small: list[Image.Image] = []
+        inv_frames: list[Image.Image] = []
+        inv_small: list[Image.Image] = []
+        durations: list[int] = []
+
         # Loop over each frame in the animated image
-        data = await image.read()
-        img = Image.open(io.BytesIO(data))
-
+        img = Image.open(fp=imagefp)
+        
         for frame in ImageSequence.Iterator(img):
             small.append(ImageOps.contain(frame, (350, 500)))
             inv_frames.append(ImageOps.invert(frame.convert("RGB")))
             inv_small.append(ImageOps.contain(inv_frames[-1], (350, 500)))
             durations.append(frame.info.get("duration", 40))
+        
         path = f"{Bot.DeweyConfig["image-save-path"]}"
         ext = "png"
+
+        # stupid
+        img_small = io.BytesIO() #     f"{path}/small/{filename}.{ext}"
+        img_evil = io.BytesIO() #      f"{path}/E{filename}.{ext}"
+        img_smallevil = io.BytesIO() # f"{path}/small/E{filename}.{ext}"
+
         if len(small) > 1:
             ext = "gif"
             small[0].save(
-                f"{path}/small/{filename}.{ext}",format="GIF",save_all=True,append_images=small[1:],loop=0,durations=durations,disposal=2
+                fp=img_small,format="GIF",save_all=True,append_images=small[1:],loop=0,durations=durations,disposal=2
             )
             inv_frames[0].save(
-                f"{path}/E{filename}.{ext}",format="GIF",save_all=True,append_images=inv_frames[1:],loop=0,durations=durations
+                fp=img_evil,format="GIF",save_all=True,append_images=inv_frames[1:],loop=0,durations=durations
             )
             inv_small[0].save(
-                f"{path}/small/E{filename}.{ext}",format="GIF",save_all=True,append_images=inv_small[1:],loop=0,durations=durations
+                fp=img_smallevil,format="GIF",save_all=True,append_images=inv_small[1:],loop=0,durations=durations
             )
         else:
-            small[0].save(f"{path}/small/{filename}.{ext}", format="png")
-            inv_frames[0].save(f"{path}/E{filename}.{ext}", format="png")
-            inv_small[0].save(f"{path}/small/E{filename}.{ext}", format="png")
+            small[0].save(fp=img_small,         format="png")
+            inv_frames[0].save(fp=img_evil,     format="png")
+            inv_small[0].save(fp=img_smallevil, format="png")
+
+
+        save_file(path=f"{path}/small",  filename=f"{filename}.{extension}",fp=img_small)
+        save_file(path=f"{path}/E",      filename=f"{filename}.{extension}",fp=img_evil)
+        save_file(path=f"{path}/small/E",filename=f"{filename}.{extension}",fp=img_smallevil)
+
         filename += f".{ext}"
 
         gachalib.cards.register_new_card(ctx.user.id,-1,next_id,name,description,"None",filename)
