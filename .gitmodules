@@ -1,3 +1,6 @@
 [submodule "other/dewey_obs"]
 	path = other/dewey_obs
 	url = https://github.com/Jased-0001/dewey_obs
+[submodule "other/dewey_webdav"]
+	path = other/dewey_webdav
+	url = https://github.com/Dewey-Inc/dewey-webdav
