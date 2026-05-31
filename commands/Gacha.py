@@ -201,7 +201,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
 
         gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id)
         
-        await ctx.response.send_message (
+        await ctx.followup.send (
             f"Dewey submitted your gacha card for approval!!! (ID of {next_id})", ephemeral=True,
         )
 
