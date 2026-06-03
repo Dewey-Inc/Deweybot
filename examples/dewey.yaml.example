@@ -14,6 +14,11 @@ mysql-password:
 mysql-database: 
 dewey-sqlite-path: 
 
+file-saving:  # Set to WebDAV or Local
+webdav-url:  # WebDAV url to save things to
+webdav-username: 
+webdav-password: 
+
 # Gacha settings
 gacha_enabled: 
 imageurl: # URL where uploaded images are saved 
