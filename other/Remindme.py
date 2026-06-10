@@ -4,6 +4,51 @@ import datetime
 import discord
 from discord.ext import tasks
 
+class TimeSelectModal(discord.ui.Modal, title="When would you like to be reminded?"):
+    m = discord.ui.TextInput(required=False, label="Minutes")
+    h = discord.ui.TextInput(required=False, label="Hours")
+    d = discord.ui.TextInput(required=False, label="Days")
+    w = discord.ui.TextInput(required=False, label="Weeks")
+
+    def __init__(self, reminder: Reminder) -> None:
+        super().__init__()
+        self.reminder = reminder
+
+    async def on_submit(self, interaction: discord.Interaction):
+        r = self.reminder
+        now = datetime.datetime.today()
+        m = int(self.m.value or 0)
+        h = int(self.h.value or 0)
+        d = int(self.d.value or 0)
+        w = int(self.w.value or 0)
+        delta = datetime.timedelta(minutes=m, hours=h, days=d, weeks=w)
+        when = round((now+delta).timestamp())
+        setReminder(r.uid, r.made, when, r.note, r.message, r.guild, r.channel)
+        await interaction.response.send_message(
+            content=f"You will be reminded again <t:{when}:R>"
+        )
+
+class RemindButton(discord.ui.Button):
+    def __init__(self, reminder) -> None:
+        self.reminder = reminder
+        super().__init__(label="Remind me again later", style=discord.ButtonStyle.primary)
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_modal(TimeSelectModal(self.reminder))
+
+class ReminderView(discord.ui.LayoutView):
+    def __init__(self, reminder: Reminder) -> None:
+        super().__init__(timeout=None)
+        container = discord.ui.Container(
+            discord.ui.TextDisplay("# Reminder"),
+            discord.ui.TextDisplay(f"""Hello I'm here to remind you of a thing you left on <t:{reminder.made}>{f" (https://discord.com/channels/{reminder.guild}/{reminder.channel}/{reminder.message})"
+                                   if reminder.guild and reminder.channel and reminder.message else ""} {f"```{reminder.note}```" if reminder.note else ""}"""),
+            discord.ui.Separator(),
+            discord.ui.ActionRow(RemindButton(reminder))
+        )
+        
+        self.add_item(container)
+
 if Bot.DeweyConfig["reminders-enabled"]:
 
     class Reminder:
@@ -56,9 +101,9 @@ if Bot.DeweyConfig["reminders-enabled"]:
                 if user == None: user = await Bot.client.fetch_user(i.uid)
                 dm_channel = user.dm_channel
                 if not dm_channel: dm_channel = await user.create_dm()
-                
-                await dm_channel.send(content=f"""Hello I'm here to remind you of a thing you left on <t:{i.made}> for <t:{i.when}>{f" (https://discord.com/channels/{i.guild}/{i.channel}/{i.message})" if i.guild and i.channel and i.message else ""}
-    {f"```{i.note}```" if i.note else ""}""")
+
+
+                await dm_channel.send(view=ReminderView(i))
             except discord.errors.Forbidden:
                 pass
 
