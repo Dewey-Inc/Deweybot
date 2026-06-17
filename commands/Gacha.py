@@ -25,11 +25,9 @@ import gachalib.trade
 
 import gachalib.views
 import gachalib.views.card
-import gachalib.views.inventory
+import gachalib.views.card_display
 import gachalib.views.pack
 import gachalib.views.request
-import gachalib.views.unaccepted
-import gachalib.views.browser
 if Bot.DeweyConfig["deweycoins-enabled"]: import gachalib.views.cardsell
 
 gacha_settings = gachalib.gacha_settings
@@ -210,7 +208,7 @@ async def gacha_browsecards(ctx : discord.Interaction, page:int = 1):
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
 
-        view = gachalib.views.browser.BrowserView(inventory=False,page=page,cards=gachalib.cards.get_cards_sent_by_id(ctx.user.id)[1])
+        view = gachalib.views.card_display.BrowserView(inventory=False,page=page,cards=gachalib.cards.get_cards_sent_by_id(ctx.user.id)[1])
 
         embed = gachalib.cardBrowserEmbed(uid=-1, cards=view.cards, page=page,inventory=False)
 
@@ -320,7 +318,7 @@ async def gacha_stats_accepted_spread(ctx : discord.Interaction):
 @gacha_group.command(name="inventory", description="View your inventory!")
 async def gacha_inventory(ctx : discord.Interaction, show: bool=True, view_button: bool=False):
     if not Permissions.banned(ctx):
-        layout = gachalib.views.inventory.InventoryView(ctx.user, button=view_button, page=1)
+        layout = gachalib.views.card_display.InventoryView(ctx.user, button=view_button, page=1)
         await ctx.response.send_message(view=layout, ephemeral=not show)
 
 
@@ -541,7 +539,7 @@ async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gach
 @gacha_group.command(name="z-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
 @discord.app_commands.check(predicate=Permissions.gacha_approve_check)
 async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
-        layout = gachalib.views.unaccepted.UnacceptedView()
+        layout = gachalib.views.card_display.UnacceptedView()
         await ctx.response.send_message(
             view=layout,
             ephemeral=True if ctx.guild else False,
