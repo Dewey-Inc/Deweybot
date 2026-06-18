@@ -1,7 +1,7 @@
 """
 things to deal with the actual cards
 """
-from Bot import Deweybase
+from Bot import Deweybase, DeweyConfig
 import gachalib
 from random import randint
 import os
@@ -139,7 +139,7 @@ def delete_card(card_id:int) -> bool:
     success, card = get_card_by_id(card_id)
     if success:
         try:
-            os.remove("images/" + card.filename)
+            os.remove(path=DeweyConfig["image-save-path"] + "/" + card.filename)
         except FileNotFoundError:
             pass
         Deweybase.write_data(statement=Deweybase.create_delete_statement(table="gacha",where=["id"]), data=(card_id,))

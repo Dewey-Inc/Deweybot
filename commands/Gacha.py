@@ -139,7 +139,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
                     f.write(fp.read())
             else:
                 raise Exception("file-saving is not WebDAV or Local")
-
+        print(extension)
         save_file(path=f"{Bot.DeweyConfig["image-save-path"]}",filename=f"{filename}.{extension}",fp=imagefp)
 
         small: list[Image.Image] = []
@@ -181,16 +181,14 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
             inv_small[0].save(fp=img_smallevil, format="png")
 
 
-        save_file(path=f"{path}/small", filename=f"{filename}.{extension}",fp=img_small)
-        save_file(path=f"{path}",       filename=f"E{filename}.{extension}",fp=img_evil)
-        save_file(path=f"{path}/small", filename=f"E{filename}.{extension}",fp=img_smallevil)
+        save_file(path=f"{path}/small", filename=f"{filename}.{ext}",fp=img_small)
+        save_file(path=f"{path}",       filename=f"E{filename}.{ext}",fp=img_evil)
+        save_file(path=f"{path}/small", filename=f"E{filename}.{ext}",fp=img_smallevil)
 
-        filename += f".{ext}"
-
-        gachalib.cards.register_new_card(ctx.user.id,-1,next_id,name,description,"None",filename)
+        gachalib.cards.register_new_card(userid=ctx.user.id,messageid=-1,id=next_id,name=name,description=description,rarity="None",filename=f"{filename}.{extension}")
 
         embed = gachalib.gacha_embed(
-            card=gachalib.types.Card(name=name, description=description,rarity="None",filename=filename),
+            card=gachalib.types.Card(name=name, description=description,rarity="None",filename=f"{filename}.{extension}"),
             title="gacha request!!", description=f"New request for a gacha card from <@{ctx.user.id}> (id = {next_id})"
             )
         message_view = gachalib.views.request.RequestView()
