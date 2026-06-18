@@ -144,9 +144,3 @@ if DeweyConfig["deweycoins-enabled"]: import commands.Bank
 if DeweyConfig["obs-integration-enabled"]: import commands.OBS_Integration
 import commands.Settings
 import commands.Other
-
-# RUN
-
-client.run(token=DeweyConfig["token"])
-
-
