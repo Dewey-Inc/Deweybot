@@ -1,6 +1,8 @@
 """
 things to deal with the actual cards
 """
+from contextlib import suppress
+
 from Bot import Deweybase, DeweyConfig
 import gachalib
 from random import randint
@@ -136,12 +138,20 @@ def update_card(id:int, update, value) -> None:
     Deweybase.write_data(statement=Deweybase.create_update_statement(table="gacha",values=[update],where=["id"]),data=(value,id))
     
 def delete_card(card_id:int) -> bool:
-    success, card = get_card_by_id(card_id)
+    success, card = get_card_by_id(card_id=card_id)
     if success:
+        extension = card.filename.split(".")
+        filename = "".join(extension[:len(extension)-1])
+        extension = extension[len(extension)-1]
+
         try:
-            os.remove(path=DeweyConfig["image-save-path"] + "/" + card.filename)
+            os.remove(path=DeweyConfig["image-save-path"] + "/"        + card.filename)
+            os.remove(path=DeweyConfig["image-save-path"] + "/E"       + filename + "." + (".gif" if extension == "gif" else "png"))
+            os.remove(path=DeweyConfig["image-save-path"] + "/small/"  + filename + "." + (".gif" if extension == "gif" else "png"))
+            os.remove(path=DeweyConfig["image-save-path"] + "/small/E" + filename + "." + (".gif" if extension == "gif" else "png"))
         except FileNotFoundError:
             pass
+
         Deweybase.write_data(statement=Deweybase.create_delete_statement(table="gacha",where=["id"]), data=(card_id,))
         return True
     else:
