@@ -54,7 +54,7 @@ else:
 
 
 total_start = time.time()
-failures = []
+failures: list[tuple[str, Exception]] = []
 
 for file in files:
     filename = file.split("/")[-1].split(".")[0]
@@ -92,12 +92,19 @@ for file in files:
             inv_frames[0].save(f"{path}/E{filename}.{ext}", format="png")
             inv_small[0].save(f"{path}/small/E{filename}.{ext}", format="png")
         filename += f".{ext}"
+
     except Exception as e:
         failures.append((file, e))
         print("\x1b[31mfailed... \x1b[0m", end="") # i want it to be red.... to stick out....
     finally:
         print(f"took {round(number=time.time()-start,ndigits=2)}s")
 
+if len(failures) > 0:
+    import traceback
+    for i in failures:
+        print(f"File {i[0]}")
+        traceback.print_exception(i[1])
+        print("\n")
 
 print("Done!")
 print(f"total {round(number=time.time()-total_start,ndigits=2)}s")
