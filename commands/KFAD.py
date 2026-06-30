@@ -69,6 +69,22 @@ async def gfad_help(ctx : discord.Interaction):
         await ctx.response.send_message(content="Test!", ephemeral=True)
 
 
+@gfad_group.command(name="z-transfer", description="! ADMIN ONLY ! mod transfer god")
+@discord.app_commands.check(predicate=Permissions.admin_check)
+async def gfad_help(ctx : discord.Interaction, pick : discord.Member):
+    await ctx.response.defer(ephemeral=False,thinking=True)
+
+    role = ctx.guild.get_role(Bot.DeweyConfig["kfad-role"])
+    assert role, "could not find role"
+    for i in role.members:
+        await i.remove_roles(role, reason="god for a day roll")
+        
+    if type(pick) == discord.Member:
+        await pick.add_roles(role,reason="god got a day!!!!")
+
+    await ctx.followup.send("successfully transfer")
+
+
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
 @discord.app_commands.check(predicate=Permissions.admin_check)
 async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 7, exclude_previous_gods:bool=False):
@@ -95,7 +111,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, day
     if type(pick) == discord.Member:
         await pick.add_roles(role,reason="god got a day!!!!")
 
-    await ctx.followup.send(content=f"{pick.display_name} is the God for the Day (until <t:\
+    await ctx.followup.send(content=f"{pick.display_name} is the Mayor for the Day (until <t:\
 {round((range_now+datetime.timedelta(days=1)).timestamp())}:f>, <t:{round((range_now+datetime.timedelta(days=1)).timestamp())}:R>! to have a chance to be god make sure you're active in the server :)\
 {' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False) #TODO: fix whatever the fuck is up with this , probably merge automatic mayor with the command
 
