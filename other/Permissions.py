@@ -66,15 +66,22 @@ def banned(ctx: discord.Interaction) -> bool:
             return True
     return False
 
-def check_permission(ctx: discord.Interaction,permission:int) -> bool:
-    if not permission == PERMISSION_ADMIN:
+def check_permission(ctx: discord.Interaction | discord.Member | discord.User ,permission:int) -> bool:
+    user = None
+    if isinstance(ctx, discord.Interaction):
+        user = ctx.user
+    else:
+        user = ctx
+
+
+    if not permission == PERMISSION_ADMIN: # this would, like, completely ignore admins for god, so that should probably be fixed
         if check_permission(ctx=ctx, permission=PERMISSION_ADMIN): return True
         
-    if ctx.user.id in permission_tree[permission]["users"]:
+    if user.id in permission_tree[permission]["users"]:
         return True
     
-    if type(ctx.user) == discord.Member:
-        user_roles = [y.id for y in ctx.user.roles]
+    if type(user) == discord.Member:
+        user_roles = [y.id for y in user.roles]
         for i in user_roles:
             if i in permission_tree[permission]["roles"]:
                 return True
