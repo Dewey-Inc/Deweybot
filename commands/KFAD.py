@@ -42,7 +42,7 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
                 if message.author.bot: not_allowed.append(message.author.id)
                 else: 
                     if type(message.author) == discord.Member:
-                        if Permissions.check_permission(ctx=message.author, Permissions.PERMISSION_GFAD_DISALLOWED):
+                        if Permissions.check_permission(ctx=message.author, permission=Permissions.PERMISSION_GFAD_DISALLOWED):
                             not_allowed.append(message.author.id)
 
                         if not message.author.id in not_allowed:
