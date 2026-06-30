@@ -74,7 +74,7 @@ def check_permission(ctx: discord.Interaction | discord.Member | discord.User ,p
         user = ctx
 
 
-    if not permission == PERMISSION_ADMIN: # this would, like, completely ignore admins for god, so that should probably be fixed
+    if not permission == PERMISSION_ADMIN or not permission == PERMISSION_GFAD_DISALLOWED:
         if check_permission(ctx=ctx, permission=PERMISSION_ADMIN): return True
         
     if user.id in permission_tree[permission]["users"]:
