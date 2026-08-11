@@ -343,15 +343,20 @@ async def gacha_roll(ctx : discord.Interaction):
     time_out = Bot.DeweyConfig["roll-timeout"] # 3600 seconds for 1 hr
     if (timestamp - last_use) > (time_out) or last_use == -1:
         cards = []
-        for i in range(3):
-            success, got_card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=False if i >= 2 else True))
-            if success:
-                cards.append(got_card)
+        gachalib.gacha_user.set_user_timeout(ctx.user.id,gachalib.gacha_user.get_timestamp())
+        try:
+            for i in range(3):
+                success, got_card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=False if i >= 2 else True))
+                if success:
+                    cards.append(got_card)
+                    gachalib.cards_inventory.give_user_card(ctx.user.id, got_card.card_id)
+        except Exception:
+            gachalib.gacha_user.set_user_timeout(ctx.user.id,last_use)
+            raise
 
         embed = discord.Embed(title="Gacha roll!", description=f"You rolled {len(cards)} cards!", color=gachalib.rarityColors[gachalib.rarest_card(cards).rarity])
 
         for i in cards:
-            gachalib.cards_inventory.give_user_card(ctx.user.id, i.card_id)
             user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(ctx.user.id, i.card_id)
             numText = "[New]" if len(user_cards[1]) < 2 else f"[{len(user_cards[1])}x]"
             desc = i.description
@@ -360,8 +365,6 @@ async def gacha_roll(ctx : discord.Interaction):
             embed.add_field(name=f"{numText} {i.name}\n({i.rarity})", value=f"{desc}\n-# ID: {i.card_id}")
 
         await ctx.response.send_message(embed=embed, view=gachalib.views.pack.PackView(cards))
-            
-        gachalib.gacha_user.set_user_timeout(ctx.user.id,gachalib.gacha_user.get_timestamp())
     else:
         await ctx.response.send_message(
             f"Aw! You're in Dewey Timeout! Try again <t:{last_use+time_out}:R>"
