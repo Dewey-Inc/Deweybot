@@ -195,16 +195,16 @@ async def remove_permission(ctx : discord.Interaction, permission:Permissions.pe
 @discord.app_commands.check(predicate=Permissions.admin_check)
 async def list_permission(ctx : discord.Interaction, permission:Permissions.permission_literal):
     permission_id = typing.get_args(Permissions.permission_literal).index(permission)+1
-    users_embed = discord.Embed(title="Users", description="ok")
-    roles_embed = discord.Embed(title="Roles", description="ok")
+    list_embed = discord.Embed(title="Permissions", description="ok")
 
-    for i in Permissions.permission_tree[permission_id]["users"]:
-        users_embed.add_field(name=f"User", value=f"<@{i}>")
-    for i in Permissions.permission_tree[permission_id]["roles"]:
-        roles_embed.add_field(name=f"Role", value=f"<@&{i}>")
+    user = "<@" + ">\n<@".join(Channels.channel_tree[permission_id]["dm"]) +">"
+    role = "<#" + ">\n<#".join(Channels.channel_tree[permission_id]["channel"]) + ">"
 
-    await ctx.response.send_message(content=f"Permission for {permission} ({"inherits admin" if Permissions.permission_tree[permission_id]["inherit_admin"] else "does not inherit from admin"})", embeds=[users_embed,roles_embed])
+    list_embed.add_field(name=f"Users", value=f"{user}")
+    list_embed.add_field(name=f"Roles", value=f"{role}")
 
+    await ctx.response.send_message(content=f"Permission for {permission} ({"inherits admin" if Permissions.permission_tree[permission_id]["inherit_admin"] else "does not inherit from admin"})",
+                                    embeds=[list_embed])
 
 
 
@@ -253,17 +253,17 @@ async def remove_channel(ctx : discord.Interaction, type: Channels.channel_liter
 @discord.app_commands.check(predicate=Permissions.admin_check)
 async def list_channel(ctx : discord.Interaction, type: Channels.channel_literal):
     channel_type_id = typing.get_args(Channels.channel_literal).index(type)+1
-    dm_embed = discord.Embed(title="Dms", description="ok")
-    channels_embed = discord.Embed(title="Channels", description="like actually whatever")
+    list_embed = discord.Embed(title="Channels", description="ok")
 
-    for i in Channels.channel_tree[channel_type_id]["dm"]:
-        dm_embed.add_field(name=f"Dms", value=f"<@{i}>")
-    for i in Channels.channel_tree[channel_type_id]["channel"]:
-        channels_embed.add_field(name=f"Role", value=f"<#{i}>")
+    dm = "<@" + ">\n<@".join(Channels.channel_tree[channel_type_id]["dm"]) + ">"
+    channel = "<#" + ">\n<#".join(Channels.channel_tree[channel_type_id]["channel"]) + ">"
+
+    list_embed.add_field(name=f"DMs", value=f"{dm}")
+    list_embed.add_field(name=f"Channels", value=f"{channel}")
 
     await ctx.response.send_message(content=f"Channels for {type}" + 
                                     f"(count {Channels.channel_tree[channel_type_id]["dm"] + Channels.channel_tree[channel_type_id]["channel"]}/{Channels.channel_tree[channel_type_id]["max"]})" 
-                                    if not Channels.channel_tree[channel_type_id]["max"] == -1 else "", embeds=[dm_embed,channels_embed])
+                                    if not Channels.channel_tree[channel_type_id]["max"] == -1 else "", embeds=[list_embed])
 
 
 Bot.tree.add_command(admin_group)

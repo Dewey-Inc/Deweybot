@@ -4,3 +4,4 @@ db_lib/*.db
 gachalib/images/*
 dewey.db
 updatedewey
+.DS_Store
