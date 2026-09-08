@@ -197,8 +197,8 @@ async def list_permission(ctx : discord.Interaction, permission:Permissions.perm
     permission_id = typing.get_args(Permissions.permission_literal).index(permission)+1
     list_embed = discord.Embed(title="Permissions", description="ok")
 
-    user = "<@"  + ">\n<@" .join([str(i) for i in Channels.channel_tree[permission_id]["user"]]) + ">"
-    role = "<@&" + ">\n<@&".join([str(i) for i in Channels.channel_tree[permission_id]["role"]]) + ">"
+    user = "<@"  + ">\n<@" .join([str(i) for i in Permissions.permission_tree[permission_id]["user"]]) + ">"
+    role = "<@&" + ">\n<@&".join([str(i) for i in Permissions.permission_tree[permission_id]["role"]]) + ">"
 
     list_embed.add_field(name=f"Users", value=f"{user}")
     list_embed.add_field(name=f"Roles", value=f"{role}")
