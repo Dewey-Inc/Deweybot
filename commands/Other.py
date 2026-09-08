@@ -197,8 +197,8 @@ async def list_permission(ctx : discord.Interaction, permission:Permissions.perm
     permission_id = typing.get_args(Permissions.permission_literal).index(permission)+1
     list_embed = discord.Embed(title="Permissions", description="ok")
 
-    user = "<@" + ">\n<@".join(Channels.channel_tree[permission_id]["dm"]) +">"
-    role = "<#" + ">\n<#".join(Channels.channel_tree[permission_id]["channel"]) + ">"
+    user = "<@" + ">\n<@".join(str(Channels.channel_tree[permission_id]["dm"])) +">"
+    role = "<@&" + ">\n<#".join(str(Channels.channel_tree[permission_id]["channel"])) + ">"
 
     list_embed.add_field(name=f"Users", value=f"{user}")
     list_embed.add_field(name=f"Roles", value=f"{role}")
@@ -255,8 +255,8 @@ async def list_channel(ctx : discord.Interaction, type: Channels.channel_literal
     channel_type_id = typing.get_args(Channels.channel_literal).index(type)+1
     list_embed = discord.Embed(title="Channels", description="ok")
 
-    dm = "<@" + ">\n<@".join(Channels.channel_tree[channel_type_id]["dm"]) + ">"
-    channel = "<#" + ">\n<#".join(Channels.channel_tree[channel_type_id]["channel"]) + ">"
+    dm = "<@" + ">\n<@".join(str(Channels.channel_tree[channel_type_id]["dm"])) + ">"
+    channel = "<#" + ">\n<#".join(str(Channels.channel_tree[channel_type_id]["channel"])) + ">"
 
     list_embed.add_field(name=f"DMs", value=f"{dm}")
     list_embed.add_field(name=f"Channels", value=f"{channel}")
