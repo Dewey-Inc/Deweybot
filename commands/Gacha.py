@@ -335,8 +335,10 @@ Evil cards: {evil_cards_had}/{cards_total} ({round((evil_cards_had/cards_total)*
 
 @gacha_group.command(name="roll", description="Roll for a card!")
 async def gacha_roll(ctx : discord.Interaction):
+    await ctx.response.defer()
+
     if not Permissions.check_if_in_main_guid(ctx=ctx): 
-        await ctx.response.send_message("You can only run this if you're in the main server!", ephemeral=True)
+        await ctx.followup.send("You can only run this if you're in the main server!", ephemeral=True)
         return
     timestamp = gachalib.gacha_user.get_timestamp()
     last_use = gachalib.gacha_user.get_user_timeout(ctx.user.id).last_use
@@ -364,9 +366,9 @@ async def gacha_roll(ctx : discord.Interaction):
                 desc = desc[:100-3] + "..."
             embed.add_field(name=f"{numText} {i.name}\n({i.rarity})", value=f"{desc}\n-# ID: {i.card_id}")
 
-        await ctx.response.send_message(embed=embed, view=gachalib.views.pack.PackView(cards))
+        await ctx.followup.send(embed=embed, view=gachalib.views.pack.PackView(cards))
     else:
-        await ctx.response.send_message(
+        await ctx.followup.send(
             f"Aw! You're in Dewey Timeout! Try again <t:{last_use+time_out}:R>"
         )
 
