@@ -1,18 +1,22 @@
 # Deweybot
-Discord bot using discord.py for the [ditzykitty](https://www.youtube.com/@ditzykittys) (and [nightwatch](https://www.youtube.com/@NIGHTWATCHprod)) discord server
+Discord bot using discord.py for [ditzykitty](https://www.youtube.com/@DITZYKITTYZZ) & [NIGHTWATCH](https://www.youtube.com/@NIGHTWATCHprod)'s discord server
 
 ## Running
 Copy `docs/examples/dewey.yaml.example` to the same directory as StartBot.py and fill it out
 
 After filling out the config file, run `tools/init_databases.py` to initalize the databases you set up.
 
-Run `./StartBot.py` directly or with `python3` or `py`
+Once everything is set up, run `./StartBot.py` directly or with `python3` or `py`
 
+## Systemd Service
+To use the systemd service, fill in:
+* `ExecStart` (with the path to StartBot.py)
+* `WorkingDirectory` (with the path containing StartBot.py)
+* `User` (with your user/the account you want the bot to run as)
+  
+Then copy it to `/etc/systemd/system/deweybot.service`
 
-### Systemd service
-To use the systemd service, fill in `ExecStart` (with the path to StartBot.py), `WorkingDirectory` (with the path containing StartBot.py), and `User` (with your user/the account you want the bot to run as), then copy it to `/etc/systemd/system/deweybot.service`
-
-Run:
+Next, run the following commands:
 ```
 sudo systemctl daemon-reload
 sudo systemctl enable deweybot
@@ -22,4 +26,4 @@ sudo systemctl start deweybot
 To view logs, run `sudo journalctl -eu deweybot.service`
 
 ## Tools
-Run tools from the root of the project (i.e `./tools/convert.py`)
+You can run tools from the root of the project (i.e `./tools/convert.py`)
