@@ -148,7 +148,12 @@ class DeweyTree(discord.app_commands.CommandTree):
             buffer.write(a.encode())
             buffer.seek(0)
             assert isinstance(channel,(discord.TextChannel, discord.Thread, discord.DMChannel)), "error channel assertion"
-            await channel.send(f"<@322495136108118016> got an report for you boss (FROM ON_APP_COMMAND_ERROR, command {interaction.command}, user {interaction.user.name}, {interaction.user.id})\n",file=discord.File(fp=buffer,filename="error.txt"))
+
+            command = ", command "
+            if interaction.command:
+                command += f"{interaction.command.name}"
+
+            await channel.send(f"<@322495136108118016> got an report for you boss (FROM ON_APP_COMMAND_ERROR{command}, user {interaction.user.name}, {interaction.user.id})\n",file=discord.File(fp=buffer,filename="error.txt"))
             buffer.close()
             
             await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
