@@ -81,6 +81,22 @@ if Bot.DeweyConfig["suggestions-enabled"]:
     Bot.client.on_message_functions.append(suggestions_reaction_message)
 
 if Bot.DeweyConfig["honeypot"]:
+    @admin_group.command(name="honey", description="I wonder what's for dinner.")
+    @discord.app_commands.allowed_installs(guilds=True, users=False)
+    @discord.app_commands.check(predicate=Permissions.repeat_check)
+    async def honey(ctx : discord.Interaction, user: discord.Member):
+        assert Bot.client.main_guild, "no main guild"
+        role = Bot.client.main_guild.get_role(Bot.DeweyConfig["honeypot-ban-role"])
+        assert role, "could not find role"
+
+        if role.id in [i.id for i in user.roles]:
+            await user.remove_roles(role, reason=f"{ctx.user.name} ran unhoney")
+            await ctx.response.send_message("I eated all the honeys off.")
+        else:
+            await user.add_roles(role, reason=f"{ctx.user.name} ran honey-ify")
+            await ctx.response.send_message("Ouuughhh..... Honeyh....... I;m like a bumb,ling be....... :bee: 🐝🐝🐝🐝🐝🐝🐝")
+
+
     async def honeypot_handler(message: discord.Message):
         channels = Channels.get_channels(channeltype=Channels.CHANNEL_HONEYPOT)
         channels_actual = []
