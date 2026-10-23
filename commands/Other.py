@@ -83,7 +83,7 @@ if Bot.DeweyConfig["suggestions-enabled"]:
 if Bot.DeweyConfig["honeypot"]:
     @admin_group.command(name="honey", description="I wonder what's for dinner.")
     @discord.app_commands.allowed_installs(guilds=True, users=False)
-    @discord.app_commands.check(predicate=Permissions.repeat_check)
+    @discord.app_commands.check(predicate=Permissions.admin_check)
     async def honey(ctx : discord.Interaction, user: discord.Member):
         assert Bot.client.main_guild, "no main guild"
         role = Bot.client.main_guild.get_role(Bot.DeweyConfig["honeypot-ban-role"])
