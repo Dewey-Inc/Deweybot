@@ -309,8 +309,8 @@ async def gacha_inventory(ctx : discord.Interaction, show: bool=True, view_butto
 
 
 @gacha_group.command(name="inventory-completion", description="View your progress in collecting!")
-async def gacha_inventory_completion(ctx : discord.Interaction):
-    _,a = gachalib.cards_inventory.get_users_cards(ctx.user.id)
+async def gacha_inventory_completion(ctx : discord.Interaction, rarity: gachalib.Rarities | None = None):
+    _,a = gachalib.cards_inventory.get_users_cards(ctx.user.id, rarity=rarity)
     _,b = gachalib.cards.get_approved_cards()
     c = []
     cards_had,evil_cards_had,cards_total = 0,0,len(b)
@@ -326,8 +326,20 @@ async def gacha_inventory_completion(ctx : discord.Interaction):
                 evil_cards_had += 1
             else:
                 cards_had += 1
+                
+    str_cards = ""
+    str_cards_evil = ""
+
+    if cards_had - cards_total <= 10:
+        cards_possible = b.copy()
+        for i in a:
+            if i in cards_possible:
+                cards_possible.remove(gachalib.cards.get_card_by_id(i.card_id)[1])
+        str_cards = "Cards: " + ",".join([str(c.card_id) for c in cards_possible]) + "\n"
+
 
     await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round((cards_had/cards_total)*100,2)}%)\n\
+{str_cards}\
 Evil cards: {evil_cards_had}/{cards_total} ({round((evil_cards_had/cards_total)*100,2)}%)")
 
 

@@ -19,14 +19,22 @@ def sort_cards_by_rarity(a:list[gachalib.types.CardsInventory] | list[gachalib.t
         #didn't test this
         return sorted(a, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b.card_id)[1].rarity])
 
-def get_users_cards(user_id:int,include_evil:bool=True) -> tuple[bool, list[gachalib.types.CardsInventory]]:
+def get_users_cards(user_id:int,include_evil:bool=True,rarity:gachalib.Rarities | None = None) -> tuple[bool, list[gachalib.types.CardsInventory]]:
     try:
         a = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="gacha_cards", values=["id","card_id"],where=["user_id"]), parameters=(user_id,))
         b = []
 
         for c in a:
             if c[1] < 0 and not include_evil: continue
-            b.append( gachalib.types.CardsInventory(inv_id=c[0],card_id=c[1],user_id=user_id) )
+            add = False
+            if rarity:
+                if gachalib.cards.get_card_by_id(c[1])[1].rarity == rarity:
+                    add = True
+            else: add = True
+
+            if add:
+                print(rarity, gachalib.cards.get_card_by_id(c[1])[1].rarity)
+                b.append( gachalib.types.CardsInventory(inv_id=c[0],card_id=c[1],user_id=user_id) )
 
         return (True,b)
     except IndexError:
