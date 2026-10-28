@@ -1,16 +1,14 @@
 
-from PIL.ImageFont import Layout
+import logging
 
 import Bot
 import gachalib.views.buy_packs
-from other import dewey_webdav
+from other import Logger, dewey_webdav
 import other.Permissions as Permissions
 import other.Channels as Channels
 if Bot.DeweyConfig["file-saving"] == "WebDAV": import other.dewey_webdav
 
 import discord
-from discord.abc import PrivateChannel
-from discord.ext import commands, tasks
 
 from typing import get_args
 from PIL import Image, ImageSequence, ImageOps
@@ -437,6 +435,48 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
                 await ctx.response.send_message("There are no duplicates", ephemeral=False)
         else:
             await ctx.response.send_message("You don't own any of this card!", ephemeral=False)
+
+    @gacha_group.command(name="sellalldupes", description="Sell all DUPLICATES of ALL card!")
+    async def gacha_sell_all_all_dupes(ctx : discord.Interaction):
+        #success, card = gachalib.cards.get_card_by_id(card_id=card_id)
+        print(ctx.user.id)
+        success, all_cards = gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id, include_evil=True)
+        print(success, all_cards)
+
+        if not success:
+            await ctx.response.send_message("You have no card. Poor. Broke. Woe is you.", ephemeral=False)
+            return
+
+        cards_and_quantities: dict[int, list[gachalib.types.CardsInventory]] = {}
+
+        for i in all_cards:
+            if not cards_and_quantities.get(i.card_id):
+                cards_and_quantities[i.card_id] = [i]
+            else:
+                cards_and_quantities[i.card_id].append(i)
+
+        Logger.log(cards_and_quantities, Logger.verbose)
+
+        cards_to_sells = []
+        total_price = 0
+
+        for card_id, cards in cards_and_quantities.items():
+            count = len(cards)
+            success, card = gachalib.cards.get_card_by_id(card_id)
+
+            if count > 1 and success:
+                cards_to_sells.extend(cards[1:count])
+                total_price += gachalib.getCardCost(card=card) * count
+
+        quantity = len(cards_to_sells)
+        if quantity > 1:
+            Logger.log(cards_to_sells, Logger.verbose)
+
+            view = gachalib.views.cardsell.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_sells,rarity="(misc)", owed=total_price, message=ctx)
+            await ctx.response.send_message(f"Do you want to sell {'this' if quantity == 1 else f'these x{quantity}'} cards for D¢{total_price}", ephemeral=False,view=view)
+        else:
+            await ctx.response.send_message("You have no card. Poor. Broke. Woe is you.", ephemeral=False)
+
 
     @gacha_group.command(name="buypack", description="Buy a special PACK of Deweycards")
     async def gacha_buy_pack(ctx : discord.Interaction):

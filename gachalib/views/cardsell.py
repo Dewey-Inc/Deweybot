@@ -7,12 +7,13 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 
 
     class CardSellConfirmation(discord.ui.View):
-        def __init__(self,owner: int, inventory_ids: list[gachalib.types.CardsInventory], rarity: str, message:discord.Interaction):
+        def __init__(self,owner: int, inventory_ids: list[gachalib.types.CardsInventory], rarity: str, message:discord.Interaction, owed: int | None = None):
             super().__init__(timeout=30)
             self.message: discord.Interaction = message
             self.owner: int = owner
             self.inventory_ids: list[gachalib.types.CardsInventory] = inventory_ids
             self.rarity: str = rarity
+            self.owed: int | None = owed
         
         def isowner(self,interaction):
             assert interaction.user, "interaction had no user"
@@ -30,20 +31,22 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
                 if not i in users_cards:
                     await interaction.response.send_message(content=f"You ain't own some the card you sellin'")
                     return
+                
+            if not self.owed:
+                self.owed = gachalib.rarity_costs[self.rarity] * len(self.inventory_ids)
 
-            owed = gachalib.rarity_costs[self.rarity] * len(self.inventory_ids)
             for i in self.inventory_ids:
                 botaccount = moneylib.getUserInfo(Bot.client.user.id)
-                if botaccount.balance < owed: 
+                if botaccount.balance < self.owed: 
                     await interaction.response.send_message(content=f"I don't actually have enough money to buy this from you!")
                     return
 
                 gachalib.cards_inventory.change_card_owner(user_id=Bot.client.user.id, inv_id=i.inv_id)
                 Logger.log("GAVE TO DEWEY", type=Logger.verbose)
 
-            moneylib.giveCoins(user=self.owner, coins=owed)
-            moneylib.giveCoins(user=Bot.client.user.id, coins=-owed)
-            await interaction.response.send_message(content=f"Success! +D¢{owed} (now D¢{moneylib.getUserInfo(self.owner).balance})")
+            moneylib.giveCoins(user=self.owner, coins=self.owed)
+            moneylib.giveCoins(user=Bot.client.user.id, coins=-self.owed)
+            await interaction.response.send_message(content=f"Success! +D¢{self.owed} (now D¢{moneylib.getUserInfo(self.owner).balance})")
     
         async def disable(self):
             for i in self.children:
