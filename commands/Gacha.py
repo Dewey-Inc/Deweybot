@@ -330,7 +330,7 @@ async def gacha_inventory_completion(ctx : discord.Interaction, rarity: gachalib
     str_cards = ""
     str_cards_evil = ""
 
-    if cards_had - cards_total <= 10:
+    if cards_total - cards_had <= 10:
         cards_possible = b.copy()
         for i in a:
             if i in cards_possible:
