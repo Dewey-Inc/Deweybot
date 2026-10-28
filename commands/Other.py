@@ -1,4 +1,5 @@
 
+from math import ceil
 import typing
 
 import discord
@@ -176,11 +177,11 @@ if Bot.DeweyConfig["gacha-enabled"]:
             )
 
 
-@Bot.tree.command(name="version", description="What version am I?")
+@Bot.tree.command(name="ping", description="yeah")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
 async def version(ctx : discord.Interaction):
     await ctx.response.send_message(
-        f"Yo yo yo man, its the big dewbert!\n{Bot.version}", ephemeral=True
+        f"Yo yo yo man, its the big dewbert!\n{Bot.version}\nPing Latency Whatever {ceil(Bot.client.latency)}ms", ephemeral=False
     )
 
 @Bot.tree.command(name="sexer", description="Sexer")
