@@ -437,7 +437,7 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
             await ctx.response.send_message("You don't own any of this card!", ephemeral=False)
 
     @gacha_group.command(name="sellalldupes", description="Sell all DUPLICATES of ALL card!")
-    async def gacha_sell_all_all_dupes(ctx : discord.Interaction):
+    async def gacha_sell_all_all_dupes(ctx : discord.Interaction, rarity: gachalib.Rarities | None = None): #verity
         #success, card = gachalib.cards.get_card_by_id(card_id=card_id)
         print(ctx.user.id)
         success, all_cards = gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id, include_evil=True)
@@ -463,8 +463,15 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
         for card_id, cards in cards_and_quantities.items():
             count = len(cards)
             success, card = gachalib.cards.get_card_by_id(card_id)
+            should = False
 
-            if count > 1 and success:
+            if rarity:
+                if card.rarity == rarity:
+                    should = True
+            else:
+                should = True
+
+            if count > 1 and success and should:
                 cards_to_sells.extend(cards[1:count])
                 total_price += gachalib.getCardCost(card=card) * count
 
