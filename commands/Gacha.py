@@ -1,5 +1,6 @@
 
 import logging
+from shutil import ExecError
 
 import Bot
 import gachalib.views.buy_packs
@@ -345,6 +346,9 @@ Evil cards: {evil_cards_had}/{cards_total} ({round((evil_cards_had/cards_total)*
 
 @gacha_group.command(name="roll", description="Roll for a card!")
 async def gacha_roll(ctx : discord.Interaction):
+    if ctx.is_expired():
+        assert ctx.message
+        raise Exception(f"Rest in peace.... {ctx.expires_at} {ctx.message.created_at}")
     await ctx.response.defer()
 
     if not Permissions.check_if_in_main_guid(ctx=ctx): 
