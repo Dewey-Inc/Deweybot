@@ -1,4 +1,5 @@
 
+import datetime
 from math import ceil
 import typing
 
@@ -181,7 +182,7 @@ if Bot.DeweyConfig["gacha-enabled"]:
 @discord.app_commands.allowed_installs(guilds=True, users=False)
 async def version(ctx : discord.Interaction):
     await ctx.response.send_message(
-        f"Yo yo yo man, its the big dewbert!\n{Bot.version}\nPing Latency Whatever {ceil(Bot.client.latency*1000)}ms", ephemeral=False
+        f"Yo yo yo man, its the big dewbert!\n{Bot.version}\nPing Latency Whatever {ceil(Bot.client.latency*1000)}ms\n Uptime: {datetime.datetime.now() - Bot.dewey_up_time}", ephemeral=False
     )
 
 @Bot.tree.command(name="sexer", description="Sexer")

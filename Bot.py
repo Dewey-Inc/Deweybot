@@ -14,6 +14,7 @@ from yaml import load,Loader
 import traceback
 from inspect import iscoroutinefunction
 from subprocess import check_output, CalledProcessError
+import datetime
 
 with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
@@ -173,3 +174,5 @@ if DeweyConfig["deweycoins-enabled"]: import commands.Bank
 if DeweyConfig["obs-integration-enabled"]: import commands.OBS_Integration
 import commands.Settings
 import commands.Other
+
+dewey_up_time = datetime.datetime.now()
