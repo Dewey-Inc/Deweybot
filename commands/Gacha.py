@@ -349,8 +349,12 @@ async def gacha_roll(ctx : discord.Interaction):
     if ctx.is_expired():
         assert ctx.message
         raise Exception(f"Rest in peace.... {ctx.expires_at} {ctx.message.created_at}")
-    await ctx.response.defer()
-
+    try:
+        await ctx.response.defer()
+    except:
+        raise Exception(f"Rest in peace.... {ctx.expires_at} {ctx.message.created_at}")
+        
+    
     if not Permissions.check_if_in_main_guid(ctx=ctx): 
         await ctx.followup.send("You can only run this if you're in the main server!", ephemeral=True)
         return
