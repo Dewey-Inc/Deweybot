@@ -1,7 +1,3 @@
-
-import logging
-from shutil import ExecError
-
 import Bot
 import gachalib.views.buy_packs
 from other import Logger, dewey_webdav
@@ -14,6 +10,7 @@ import discord
 from typing import get_args
 from PIL import Image, ImageSequence, ImageOps
 import io
+import re
 
 import gachalib
 import gachalib.types
@@ -346,13 +343,7 @@ Evil cards: {evil_cards_had}/{cards_total} ({round((evil_cards_had/cards_total)*
 
 @gacha_group.command(name="roll", description="Roll for a card!")
 async def gacha_roll(ctx : discord.Interaction):
-    if ctx.is_expired():
-        assert ctx.message
-        raise Exception(f"Rest in peace.... {ctx.expires_at} {ctx.message.created_at}")
-    try:
-        await ctx.response.defer()
-    except:
-        raise Exception(f"Rest in peace.... {ctx.expires_at} {ctx.message.created_at}")
+    await ctx.response.defer()
         
     
     if not Permissions.check_if_in_main_guid(ctx=ctx): 
@@ -579,6 +570,18 @@ async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved:
 async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord.Member|discord.User):
     cardid = gachalib.cards_inventory.give_user_card(user_id=user.id, card_id=id)
     await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
+
+
+@gacha_group.command(name="z-admin-regex", description="!MOD ONLY! Sort through all cards via regex")
+@discord.app_commands.check(predicate=Permissions.admin_check)
+async def z_gacha_admin_regex(ctx : discord.Interaction, regex:str):
+    a, cards = gachalib.cards.get_cards()
+    assert a
+
+    r = re.compile(regex)
+    matches = list(filter(r.match, [str(card.card_id) for card in cards]))
+
+    await ctx.response.send_message(f"Matching cards: " + ", ".join(matches))
 
 
 @gacha_group.command(name="z-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
