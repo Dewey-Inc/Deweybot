@@ -1,3 +1,5 @@
+# we should maybe possibly refactor everything so we're not using 3 different names for it lol
+
 import io
 import discord
 from discord.ext import commands, tasks
@@ -5,12 +7,81 @@ import Bot
 import other.Permissions as Permissions
 import other.Logger as Logger
 import other.Channels as Channels
-
 import datetime,random
+import typing
 
+info_msg = f"""In this server, a new mayor is randomly chosen every day. \
+To qualify, you must have sent at least {Bot.DeweyConfig["kfad-must-have"]} messages in the last 2 weeks.
 
+As mayor, you can:
+* Post about whatver you feel like in your own channel (within rules)
+* Change a letter in a channel's name
+* Change a letter in Dewey's bio"""
 
 gfad_group = discord.app_commands.Group(name="gfad", description="God for a day")
+
+class GodView(discord.ui.LayoutView):
+    def __init__(self, god:discord.Member|discord.User, end:datetime.datetime) -> None:
+        super().__init__(timeout=None)
+        container = discord.ui.Container(
+            discord.ui.TextDisplay("# Mayor for the Day"),
+            discord.ui.TextDisplay(f"{god.mention} is the Mayor for the Day (until <t:{round(end.timestamp())}:f>, "
+                                   f"<t:{round(end.timestamp())}:R>! to have a chance to be Mayor make sure you're active in the server :)"),
+            discord.ui.Separator(),
+            InfoActionRow()
+        )
+        self.add_item(container)
+
+class InfoActionRow(discord.ui.ActionRow):
+    @discord.ui.button(label="More info", style=discord.ButtonStyle.secondary, row=0, custom_id="info")
+    async def info_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.response.send_message(content=info_msg, ephemeral=True)
+
+#    @discord.ui.button(label="Skip", style=discord.ButtonStyle.primary, row=0, custom_id="skip")
+#    async def skip_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+#        await interaction.response.defer()
+#        assert interaction.guild and type(interaction.user) == discord.Member, "skip ran outside guild"
+#
+#        if interaction.guild.get_role(Bot.DeweyConfig["kfad-role"]) in interaction.user.roles:
+#            await roll_god(message_requirement=Bot.DeweyConfig["kfad-must-have"], days=14, exclude_prev_gods=True)
+#            await interaction.delete_original_response()
+#        else:
+#            await interaction.followup.send(content="Only the current mayor can do this!", ephemeral=True)
+
+    @discord.ui.button(label="Opt out", style=discord.ButtonStyle.danger, row=0, custom_id="opt-out")
+    async def optout_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        Permissions.add_permission(id=interaction.user.id, type=2, permission=typing.get_args(Permissions.permission_literal).index("PERMISSION_GFAD_DISALLOWED")+1)
+        await interaction.response.send_message(content="You will no longer be able to recieve this role!", ephemeral=True)
+
+
+async def roll_god(message_requirement, days, exclude_prev_gods):
+    godchannel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_GOD_CHANNEL,filtertype=Channels.TYPE_CHANNEL)[0])
+    assert isinstance(godchannel,(discord.TextChannel,discord.Thread)), "god channel assertion"
+    
+    range_now = datetime.datetime.today()
+    range_start = range_now - datetime.timedelta(days=days)
+    range_end = range_now
+
+    assert Bot.client.main_guild, "Bot.client.main_guild assertion"
+    qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=Bot.client.main_guild,getmembers=True, exclude_prev_gods=exclude_prev_gods)
+    
+    if len(qualifiers) == 0:
+        await godchannel.send(content=f"(There aren't enough people who qualify)", silent=True)
+        return
+    
+    pick = random.choice(qualifiers)
+    role = Bot.client.main_guild.get_role(Bot.DeweyConfig["kfad-role"])
+    assert role, "could not find role"
+
+    for i in role.members:
+        await i.remove_roles(role, reason="god for a day roll")
+    
+    if type(pick) == discord.Member:
+        await pick.add_roles(role,reason="god got a day!!!!")
+
+    view = GodView(pick, range_now+datetime.timedelta(days=1))
+    await godchannel.send(view=GodView(pick, range_now+datetime.timedelta(days=1)))
+
 
 async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime,
                          guild:discord.Guild,getmembers:bool,exclude_prev_gods:bool=True) -> tuple[list[discord.Member | discord.User], dict[str,int]]:
@@ -90,34 +161,12 @@ async def gfad_transfer(ctx : discord.Interaction, pick : discord.Member):
 
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
 @discord.app_commands.check(predicate=Permissions.admin_check)
-async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 7, exclude_previous_gods:bool=False):
+async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 14, exclude_previous_gods:bool=True):
     if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
-    range_now = datetime.datetime.today()
-    range_start = range_now - datetime.timedelta(days=days)
-    range_end = range_now
-        
-    await ctx.response.defer(ephemeral=False,thinking=True)
+    await ctx.response.defer()
 
-    assert ctx.guild, "ctx.guild assertion"
-    qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True, exclude_prev_gods=exclude_previous_gods)
-
-    if len(qualifiers) == 0:
-        await ctx.followup.send(content=f"(There aren't enough people who qualify)", silent=True, ephemeral=False)
-        return
-    pick = random.choice(qualifiers)
-
-    role = ctx.guild.get_role(Bot.DeweyConfig["kfad-role"])
-    assert role, "could not find role"
-    for i in role.members:
-        await i.remove_roles(role, reason="god for a day roll")
-        
-    if type(pick) == discord.Member:
-        await pick.add_roles(role,reason="god got a day!!!!")
-
-    await ctx.followup.send(content=f"{pick.display_name} is the Mayor for the Day (until <t:\
-{round((range_now+datetime.timedelta(days=1)).timestamp())}:f>, <t:{round((range_now+datetime.timedelta(days=1)).timestamp())}:R>! to have a chance to be god make sure you're active in the server :)\
-{' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False) #TODO: fix whatever the fuck is up with this , probably merge automatic mayor with the command
-
+    await roll_god(days=days, exclude_prev_gods=exclude_previous_gods, message_requirement=message_requirement)
+    await ctx.delete_original_response()
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
 @discord.app_commands.check(predicate=Permissions.admin_check)
@@ -161,37 +210,10 @@ if Bot.DeweyConfig["kfad-auto"]:
         Logger.log(" [king for a day] im runnninggg", type=Logger.info)
         
         godchannel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_GOD_CHANNEL,filtertype=Channels.TYPE_CHANNEL)[0])
-
         assert isinstance(godchannel,(discord.TextChannel,discord.Thread)), "god channel assertion"
-        assert godchannel
 
         await godchannel.send("Hello! I'm *Dewey*, the one in the electoral college or something. I'm gonna roll a dice!")
-
-        message_requirement = Bot.DeweyConfig["kfad-must-have"]
-        range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(days=14)
-        range_end = range_now
-
-        assert Bot.client.main_guild, "Bot.client.main_guild assertion"
-        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=Bot.client.main_guild,getmembers=True, exclude_prev_gods=True)
-
-        if len(qualifiers) == 0:
-            await godchannel.send(content=f"(There aren't enough people who qualify)", silent=True)
-            return
-        pick = random.choice(qualifiers)
-
-        role = Bot.client.main_guild.get_role(Bot.DeweyConfig["kfad-role"])
-        assert role, "could not find role"
-        for i in role.members:
-            await i.remove_roles(role, reason="god for a day roll")
-        
-        if type(pick) == discord.Member:
-            await pick.add_roles(role,reason="god got a day!!!!")
-
-        await godchannel.send(content=f"{pick.mention} is the Mayor for the Day (until <t:\
-{round((range_now+datetime.timedelta(days=1)).timestamp())}:f>, <t:{round((range_now+datetime.timedelta(days=1)).timestamp())}:R>! to have a chance to be Mayor make sure you're active in the server :)\
-{' (please give role)' if type(pick) == discord.User else ''}")
-        
+        await roll_god(message_requirement=Bot.DeweyConfig["kfad-must-have"], days=14, exclude_prev_gods=True)
     
     Bot.client.on_ready_functions.append(kfad_task.start)
 
