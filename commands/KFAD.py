@@ -14,9 +14,9 @@ info_msg = f"""In this server, a new mayor is randomly chosen every day. \
 To qualify, you must have sent at least {Bot.DeweyConfig["kfad-must-have"]} messages in the last 2 weeks.
 
 As mayor, you can:
-* Post about whatver you feel like in your own channel (within rules)
-* Change a letter in a channel's name
-* Change a letter in Dewey's bio"""
+* Post about whatever you feel like in this channel (within rules)
+* Change a channel's name by one letter
+* Change Dewey's bio by one letter"""
 
 gfad_group = discord.app_commands.Group(name="gfad", description="God for a day")
 
