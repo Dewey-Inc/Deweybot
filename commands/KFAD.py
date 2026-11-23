@@ -58,8 +58,16 @@ class InfoActionRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="Opt out", style=discord.ButtonStyle.danger, row=0, custom_id="opt-out")
     async def optout_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        Permissions.add_permission(id=interaction.user.id, type=2, permission=typing.get_args(Permissions.permission_literal).index("PERMISSION_GFAD_DISALLOWED")+1)
-        await interaction.response.send_message(content="You will no longer be able to recieve this role!", ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
+        assert interaction.guild and type(interaction.user) == discord.Member, "opt out ran outside guild"
+
+        role = interaction.guild.get_role(Bot.DeweyConfig["kfad-optout-role"])
+        if role in interaction.user.roles:
+            await interaction.user.remove_roles(role, reason="mayor opt-in")
+            await interaction.followup.send(content="Successfully opted back in! You will be included in future rolls.", ephemeral=True)
+        else:
+            await interaction.user.add_roles(role, reason="mayor opt-out")
+            await interaction.followup.send(content="Successfully opted out! You will not be included in future rolls.", ephemeral=True)
 
 
 async def roll_god(message_requirement:int, days:int, exclude_prev_gods:bool, rolled_by:discord.Member|discord.User|None = None) -> None:    
