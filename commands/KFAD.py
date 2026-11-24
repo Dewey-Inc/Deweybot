@@ -8,7 +8,6 @@ import other.Permissions as Permissions
 import other.Logger as Logger
 import other.Channels as Channels
 import datetime,random
-import typing
 
 info_msg = f"""In this server, a new mayor is randomly chosen every day. \
 To qualify, you must have sent at least {Bot.DeweyConfig["kfad-must-have"]} messages in the last 2 weeks.
