@@ -14,22 +14,30 @@ info_msg = f"""In this server, a new mayor is randomly chosen every day. \
 To qualify, you must have sent at least {Bot.DeweyConfig["kfad-must-have"]} messages in the last 2 weeks.
 
 As mayor, you can:
-* Post about whatever you feel like in this channel (within rules)
+* Post about whatever you feel like in your own channel (within rules)
 * Change a channel's name by one letter
 * Change Dewey's bio by one letter"""
 
 gfad_group = discord.app_commands.Group(name="gfad", description="God for a day")
 
 class GodView(discord.ui.LayoutView):
-    def __init__(self, god:discord.Member|discord.User, end:datetime.datetime) -> None:
+    def __init__(self, pick:discord.Member|None, end:datetime.datetime, rolled_by:discord.Member|discord.User|None) -> None:
         super().__init__(timeout=None)
-        container = discord.ui.Container(
-            discord.ui.TextDisplay("# Mayor for the Day"),
-            discord.ui.TextDisplay(f"{god.mention} is the Mayor for the Day (until <t:{round(end.timestamp())}:f>, "
-                                   f"<t:{round(end.timestamp())}:R>! to have a chance to be Mayor make sure you're active in the server :)"),
-            discord.ui.Separator(),
-            InfoActionRow()
-        )
+        if pick:
+            container = discord.ui.Container(
+                discord.ui.TextDisplay("# Mayor for the Day"),
+                discord.ui.TextDisplay(f"{pick.mention} is the Mayor for the Day (until <t:{round(end.timestamp())}:f>, "
+                                       f"<t:{round(end.timestamp())}:R>! To have a chance to be Mayor make sure you're active in the server :)")
+            )
+        else:
+            container = discord.ui.Container(
+                discord.ui.TextDisplay("## Mayor roll failed"),
+                discord.ui.TextDisplay("There aren't enough people who qualify.")
+            )
+        if rolled_by:
+            container.add_item(discord.ui.TextDisplay(f"-# Rolled manually by {rolled_by.mention}"))
+        container.add_item(discord.ui.Separator())
+        container.add_item(InfoActionRow())
         self.add_item(container)
 
 class InfoActionRow(discord.ui.ActionRow):
@@ -54,7 +62,7 @@ class InfoActionRow(discord.ui.ActionRow):
         await interaction.response.send_message(content="You will no longer be able to recieve this role!", ephemeral=True)
 
 
-async def roll_god(message_requirement, days, exclude_prev_gods):
+async def roll_god(message_requirement:int, days:int, exclude_prev_gods:bool, rolled_by:discord.Member|discord.User|None = None) -> None:    
     godchannel = await Channels.get_channel(channel_def=Channels.get_channels(channeltype=Channels.CHANNEL_GOD_CHANNEL,filtertype=Channels.TYPE_CHANNEL)[0])
     assert isinstance(godchannel,(discord.TextChannel,discord.Thread)), "god channel assertion"
     
@@ -63,31 +71,28 @@ async def roll_god(message_requirement, days, exclude_prev_gods):
     range_end = range_now
 
     assert Bot.client.main_guild, "Bot.client.main_guild assertion"
-    qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=Bot.client.main_guild,getmembers=True, exclude_prev_gods=exclude_prev_gods)
+    qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=Bot.client.main_guild,exclude_prev_gods=exclude_prev_gods)
     
     if len(qualifiers) == 0:
-        await godchannel.send(content=f"(There aren't enough people who qualify)", silent=True)
+        await godchannel.send(view=GodView(None, range_now+datetime.timedelta(days=1), rolled_by))
         return
     
-    pick = random.choice(qualifiers)
+    pick = random.choice(list(qualifiers))
     role = Bot.client.main_guild.get_role(Bot.DeweyConfig["kfad-role"])
     assert role, "could not find role"
 
     for i in role.members:
         await i.remove_roles(role, reason="god for a day roll")
     
-    if type(pick) == discord.Member:
-        await pick.add_roles(role,reason="god got a day!!!!")
-
-    view = GodView(pick, range_now+datetime.timedelta(days=1))
-    await godchannel.send(view=GodView(pick, range_now+datetime.timedelta(days=1)))
+    await pick.add_roles(role,reason="god got a day!!!!")
+    await godchannel.send(view=GodView(pick, range_now+datetime.timedelta(days=1), rolled_by))
 
 
 async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime,
-                         guild:discord.Guild,getmembers:bool,exclude_prev_gods:bool=True) -> tuple[list[discord.Member | discord.User], dict[str,int]]:
-    unique_authors: dict[str, int] = {}
+                         guild:discord.Guild,exclude_prev_gods:bool=True) -> dict[discord.Member, int]:
+    unique_authors: dict[int, int] = {}
     not_allowed: list[int] = []
-    qualifiers: list[discord.Member | discord.User] = []
+    qualifiers: dict[discord.Member, int] = {}
 
     gfad_channels_with_type = Channels.get_channels(channeltype=Channels.CHANNEL_GFAD_SEARCH,filtertype=Channels.TYPE_CHANNEL)
     gfad_channels = []
@@ -117,26 +122,28 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
                             not_allowed.append(message.author.id)
 
                         if not message.author.id in not_allowed:
-                            if str(message.author.id) in unique_authors:
-                                unique_authors[str(message.author.id)] += 1
+                            if message.author.id in unique_authors:
+                                unique_authors[message.author.id] += 1
                             else:
-                                unique_authors[str(message.author.id)] = 1
+                                unique_authors[message.author.id] = 1
                     else:
                         not_allowed.append(message.author.id)
 
-    if getmembers:
-        for uid,messagecount in unique_authors.items():
-            if messagecount >= message_requirement:
-                user = guild.get_member(int(uid))
-                if user == None: user = await guild.fetch_member(int(uid))
+    for uid,messagecount in unique_authors.items():
+        if messagecount < message_requirement:
+            continue # exclude if below requirement
+        if not (user := guild.get_member(uid)):
+            try:
+                user = await guild.fetch_member(uid)
+            except discord.NotFound:
+                continue # exclude if not in server
+        qualifiers[user] = messagecount
 
-                qualifiers.append(user)
+    return qualifiers
 
-    return (qualifiers, unique_authors)
-
-@gfad_group.command(name="help", description="What is a 'god' and why for a day?")
+@gfad_group.command(name="help", description="What is a 'mayor' and why for a day?")
 async def gfad_help(ctx : discord.Interaction):
-    await ctx.response.send_message(content="Test!", ephemeral=True)
+    await ctx.response.send_message(content=info_msg, ephemeral=True)
 
 
 @gfad_group.command(name="z-transfer", description="! ADMIN ONLY ! mod transfer god")
@@ -161,16 +168,16 @@ async def gfad_transfer(ctx : discord.Interaction, pick : discord.Member):
 
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
 @discord.app_commands.check(predicate=Permissions.admin_check)
-async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 14, exclude_previous_gods:bool=True):
+async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 14, exclude_prev_gods:bool=True):
     if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
-    await ctx.response.defer()
+    await ctx.response.defer(ephemeral=True, thinking=True)
 
-    await roll_god(days=days, exclude_prev_gods=exclude_previous_gods, message_requirement=message_requirement)
-    await ctx.delete_original_response()
+    await roll_god(days=days, exclude_prev_gods=exclude_prev_gods, message_requirement=message_requirement, rolled_by=ctx.user)
+    await ctx.followup.send("Done!")
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
 @discord.app_commands.check(predicate=Permissions.admin_check)
-async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1, exclude_prev_gods:bool=True, days:int = 7):
+async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1, exclude_prev_gods:bool=True, days:int = 14):
     if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
     range_now = datetime.datetime.today()
     range_start = range_now - datetime.timedelta(days=days)
@@ -179,23 +186,15 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
     await ctx.response.defer(ephemeral=False, thinking=True)
 
     assert ctx.guild, "ctx.guild assertion"
-    _,qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False,exclude_prev_gods=exclude_prev_gods)
-    qualifier_count = {}
+    qualifiers = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,exclude_prev_gods=exclude_prev_gods)
 
     if len(qualifiers) == 0:
         await ctx.followup.send(content=f"(Nobody qualifies)", ephemeral=False)
         return
-        
-    for uid,messagecount in qualifiers.items():
-        if messagecount >= message_requirement:
-            qualifier_count[str(uid)] = messagecount
 
     string = ""
-    for uid,count in qualifier_count.items():
-        loser = ctx.guild.get_member(uid)
-        if loser == None: loser = await ctx.guild.fetch_member(uid)
-
-        string += loser.name + ": " + str(count) + "\n"
+    for user,count in qualifiers.items():
+        string += user.name + ": " + str(count) + "\n"
         
     buffer = io.BytesIO()
     buffer.write(string.encode())
@@ -205,7 +204,7 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
 if Bot.DeweyConfig["kfad-auto"]:
     run = datetime.time(hour=15, minute=00, second=00, tzinfo=datetime.timezone(datetime.timedelta(hours=-4),"EDT"))
 
-    @tasks.loop(name="remindme-task", time=run)
+    @tasks.loop(name="kfad-task", time=run)
     async def kfad_task():
         Logger.log(" [king for a day] im runnninggg", type=Logger.info)
         
