@@ -28,6 +28,7 @@ gacha-reminder-task:
 kfad-enabled: 
 kfad-must-have:  # messages
 kfad-role: 
+kfad-optout-role: 
 kfad-auto: 
 
 # obs integration
